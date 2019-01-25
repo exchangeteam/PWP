@@ -1,8 +1,8 @@
-# PWP SPRING 2019
-# PROJECT NAME
+SPRING 2019
+# SurveyPWP
 # Group information
-* Student 1. Name and email
-* Student 2. Name and email
-* Student 3. Name and email
+* Student 1. Berke Esmer and berkee.eesmer@gmail.com
+* Student 2. Zifan Xiao and xiao@139.com
+* Student 3. Mengnanlan Peng and llanan9817@163.com
 
 
