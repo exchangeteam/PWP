@@ -12,47 +12,58 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor.close()
 
 def create_db():
+	
+	db.create_all()
 	print("Database is created!")
 	print("--------------------")
 
-	db.create_all()
-
 def create_questionnaire(_title, _description=""):
+	"""
+	Create a questionnaire with title and description.
+	Titles are mandatory while descriptions are optional.
+	"""
 	if(_description != ""):
 		questionnaire = Questionnaire(title = _title, description = _description)
 	else:
 		questionnaire = Questionnaire(title = _title)
 
+	db.session.add(questionnaire)
 	print("A new questionnaire is created.")
 	print("Title: ", _title)
 	print("Description: ", _description)
 	print("--------------------")
-
-	db.session.add(questionnaire)
 	return questionnaire
 
 def create_question(_title, _questionnaire, _description=""):
+	"""
+	Create a question with title and description.
+	Titles are mandatory while descriptions are optional.
+	It's also mandatory to put it into a specific questionnaire.
+	"""
 	if(_description != ""):
 		question = Question(title = _title, description = _description, questionnaire = _questionnaire)
 	else:
 		question = Question(title = _title, questionnaire = _questionnaire)
 
+	db.session.add(question)
 	print("A new question is created.")
 	print("Title: ", _title)
 	print("Description: ", _description)
 	print("--------------------")
-
-	db.session.add(question)
 	return question
 
 def create_answer(_content, _question):
+	"""
+	Create an answer to one question.
+	Content of the answer is required.
+	It's also mandatory to put it into a specific questionnaire.
+	"""
 	answer = Answer(content = _content, question = _question)
 
+	db.session.add(answer)
 	print("A new answer is created.")
 	print("Content: ", _content)
 	print("--------------------")
-
-	db.session.add(answer)
 	return answer
 
 #Main function
