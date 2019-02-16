@@ -35,7 +35,7 @@ class Questionnaire(db.Model):
 	title = db.Column(db.String(64), nullable = False)
 	description = db.Column(db.String(512), nullable = True)
 
-	question = db.relationship("Question", back_populates = "questionnaire")
+	question = db.relationship("Question", back_populates = "questionnaire", cascade = "save-update, delete")
 
 """
 Table : Question
@@ -57,7 +57,7 @@ class Question(db.Model):
 	description = db.Column(db.String(512), nullable = True)
 
 	questionnaire = db.relationship("Questionnaire", back_populates = "question")
-	answer = db.relationship("Answer", back_populates = "question")
+	answer = db.relationship("Answer", back_populates = "question", cascade = "save-update, delete")
 
 """
 Table : Answer

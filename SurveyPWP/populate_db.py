@@ -56,7 +56,7 @@ def create_answer(_content, _question):
 	db.session.add(answer)
 	return answer
 
-# Main function
+#Main function
 create_db()
 
 first_questionnaire = create_questionnaire("Birthday party for Ivan", "We are organizing a birthday party for Ivan. He is going to be so happy!")
@@ -68,3 +68,4 @@ second_answer = create_answer("Three people: Berke, Alina, Xiao", second_questio
 thirds_answer = create_answer("Star Wars theme.", third_question)
 
 db.session.commit()
+db.session.rollback()
