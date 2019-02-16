@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.engine import Engine
+from sqlalchemy import event
 from sqlite3 import Connection as SQLite3Connection
 
 # Configuring and setting up the database for usage. 
@@ -50,8 +51,8 @@ Description : This table stores all the questions, and each question belongs to 
 * 'answer', RELATIONSHIP with the Answer table.
 """
 class Question(db.Model):
-	id = db.Column(db.Integer, primary_key = True)
-	questionnaire_id = db.Column(db.Integer, db.ForeignKey("questionnaire.id"), primary_key = True)
+	id = db.Column(db.Integer, primary_key = True, autoincrement = True)
+	questionnaire_id = db.Column(db.Integer, db.ForeignKey("questionnaire.id"), nullable = False)
 	title = db.Column(db.String(64), nullable = False)
 	description = db.Column(db.String(512), nullable = True)
 
@@ -71,7 +72,7 @@ Description : This table stores all the answers, and each answer belongs to a sp
 """
 class Answer(db.Model):
 	id = db.Column(db.Integer, primary_key = True)
-	question_id = db.Column(db.Integer, db.ForeignKey("question.id"), primary_key = True)
+	question_id = db.Column(db.Integer, db.ForeignKey("question.id"), nullable = False)
 	content = db.Column(db.String(512), nullable = False)
 
 	question = db.relationship("Question", back_populates = "answer")

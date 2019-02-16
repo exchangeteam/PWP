@@ -1,6 +1,15 @@
 from app import db, Questionnaire, Question, Answer
-from sqlalchemy import exc
-from sqlalchemy import orm
+from sqlalchemy import exc, orm, event
+from sqlalchemy.engine import Engine
+
+# Enforcing foreign key constraints which needs a manual configuration.
+# Code taken from Kiran Jonnalagadda, https://stackoverflow.com/questions/2614984/sqlite-sqlalchemy-how-to-enforce-foreign-keys
+@event.listens_for(Engine, "connect")
+def _set_sqlite_pragma(dbapi_connection, connection_record):
+    if isinstance(dbapi_connection, SQLite3Connection):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys = ON;")
+        cursor.close()
 
 db.create_all()
 
