@@ -16,8 +16,7 @@ db.create_all()
 Then an empty database named `test.db` is in the same directory where your code is.
 ## Populating the database
 
-# Database testing 
-## Required imformation
+## Database testing 
 After creating the database, we should test it now. The testing of database requires `sqlalchemy`, `sqlite3`, `populate_db`, `pytest`.
 
 
