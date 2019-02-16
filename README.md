@@ -16,9 +16,9 @@ Tha data base can be created by running two lines of code:
 from database import db
 db.create_all()
 ```
-Then an empty database named `database.db` is in the same directory where your code is.
+Then an empty database named `database.db` is in the same directory where your code is. 
 ## Populating the database
-After creating an empty database,you can insert some data into the models and test it later. So you can import the `populate_db.py` and there are some functions for populating the database. One example of creating a table is following:
+After creating an empty database,you can insert some data into the models and test it later. So you can import the `populate_db.py` and there are some functions for populating the database. One example of populating the database is following:
 ```python
 def create_question(_title, _questionnaire, _description=""):
 	if(_description != ""):
@@ -34,10 +34,24 @@ def create_question(_title, _questionnaire, _description=""):
 	db.session.add(question)
 	return question
 ```
+By using this function, you can input the data you want to insert and need to run `db.session.commit()`. Also, if you want to populate the database quickly, you can use `python populate_db.py`.
+
+There are more documentations and explanation in `populate.py` you can check.
 
 ## Database testing 
-After creating the database, we should test it now. The testing of database requires `sqlalchemy`, `sqlite3`, `populate_db`, `pytest`.
+After populating the database, you can test it now. The testing of database requires `tempfile`, `pytest`, `os`. Then you can use `test_db.py` to test the database automatically. You should put the file `test_db.py` into the same directory of the `app.py`, `populate_db.py` and `database.db`. Then you can run the command `pytest test_db.py`, the database will be tested automatically. The detailed result will be shown after test, so you can see the test passed or failed.
 
+One example of testing functions in `test_db.py` is following:
+```python
+def test_questionnaire_filter1(db_handle):
+	questionnaire = _get_questionnaire()
+	db.session.add(questionnaire)
+	db.session.commit()
+
+	query_questionnaire = Questionnaire.query.filter_by(title = "Birthday party for Ivan")
+
+	assert query_questionnaire.count() == 1
+```
 
 
 
