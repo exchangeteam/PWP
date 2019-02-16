@@ -6,7 +6,9 @@
 * Student 3. Mengnanlan Peng and llanan9817@163.com
 # Database setup
 ## Required imformation
-The creating of database requires `Flask`, `flask_sqlalchemy`, `sqlite3`. All of these can be installed by using `pip install` command with the name, for example `pip install Flask`. We also recommend you to use the following command to install all the librarys you need.
+The creating of database requires `Flask`, `flask_sqlalchemy`, `sqlite3`. All of these can be installed by using `pip install` command with the name, for example `pip install Flask`. 
+
+We also recommend you to use the following command to install all the librarys you need.
 ```python
 pip install -r requirements.txt
 ``` 
@@ -34,7 +36,9 @@ def create_question(_title, _questionnaire, _description=""):
 	db.session.add(question)
 	return question
 ```
-By using this function, you can input the data you want to insert and need to run `db.session.commit()`. Also, if you want to populate the database quickly, you can use `python populate_db.py`.
+By using this function, you can input the data you want to insert and need to run `db.session.commit()`. 
+
+Also, if you want to populate the database quickly, you can use `python populate_db.py`.
 
 There are more documentations and explanation in `populate.py` you can check.
 
