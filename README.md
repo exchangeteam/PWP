@@ -16,6 +16,9 @@ db.create_all()
 Then an empty database named `test.db` is in the same directory where your code is.
 ## Populating the database
 
+## Database testing 
+
+
 
 
 
