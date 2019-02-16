@@ -13,11 +13,10 @@ db = SQLAlchemy(app)
 # Enforcing foreign key constraints which needs a manual configuration.
 # Code taken from Kiran Jonnalagadda, https://stackoverflow.com/questions/2614984/sqlite-sqlalchemy-how-to-enforce-foreign-keys
 @event.listens_for(Engine, "connect")
-def _set_sqlite_pragma(dbapi_connection, connection_record):
-    if isinstance(dbapi_connection, SQLite3Connection):
-        cursor = dbapi_connection.cursor()
-        cursor.execute("PRAGMA foreign_keys = ON;")
-        cursor.close()
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
 
 """
 Table : Questionnaire
@@ -43,7 +42,7 @@ Table : Question
 Description : This table stores all the questions, and each question belongs to a specific questionnaire.
 
 - 'id', INTEGER, PRIMARY KEY, Contains id of each question.
-- 'questionnaire_id', INTEGER, FOREIGN KEY & PRIMARY KEY, Contains id of each questionnaire.
+- 'questionnaire_id', INTEGER, FOREIGN KEY, NOT NULL, Contains id of the questionnaire.
 - 'title', STRING, MAX 64 Characters, NOT NULL, Contains the title of each question.
 - 'description', STRING, MAX 512 Characters, NULLABLE, Contains the description of each question.
 
@@ -51,7 +50,7 @@ Description : This table stores all the questions, and each question belongs to 
 * 'answer', RELATIONSHIP with the Answer table.
 """
 class Question(db.Model):
-	id = db.Column(db.Integer, primary_key = True, autoincrement = True)
+	id = db.Column(db.Integer, primary_key = True)
 	questionnaire_id = db.Column(db.Integer, db.ForeignKey("questionnaire.id"), nullable = False)
 	title = db.Column(db.String(64), nullable = False)
 	description = db.Column(db.String(512), nullable = True)
@@ -65,7 +64,7 @@ Table : Answer
 Description : This table stores all the answers, and each answer belongs to a specific question.
 
 - 'id', INTEGER, PRIMARY KEY, Contains id of each answer.
-- 'question_id', INTEGER, FOREIGN KEY & PRIMARY KEY, Contains id of each question.
+- 'question_id', INTEGER, FOREIGN KEY, NULLABLE, Contains id of the question.
 - 'content', STRING, MAX 512 Characters, NOT NULL, Contains the answer as a string.
 
 * 'question', RELATIONSHIP with the Question table.
