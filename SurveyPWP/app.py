@@ -35,7 +35,6 @@ class Questionnaire(db.Model):
 	description = db.Column(db.String(512), nullable = True)
 
 	question = db.relationship("Question", back_populates = "questionnaire", cascade = "save-update, delete")
-	session = db.relationship("Session",back_populates = "questionnaire")
 """
 Table : Question
 ----------------------
@@ -73,19 +72,6 @@ class Answer(db.Model):
 	id = db.Column(db.Integer, primary_key = True)
 	question_id = db.Column(db.Integer, db.ForeignKey("question.id"), nullable = False)
 	content = db.Column(db.String(512), nullable = False)
+	userName = db.Column(db.String(64), nullable = False)
 
 	question = db.relationship("Question", back_populates = "answer")
-	session = db.relationship("Session",back_populates = "answer")
-"""
-Table : Session
-----------------------
-Description : 
-
-"""
-class Session(db.Model):
-	id = db.Column(db.Integer, primary_key = True)
-	questionnaire_id = db.Column(db.Integer, db.ForeignKey("questionnaire.id"), nullable = False)
-	answer_id = db.Column(db.Integer, db.ForeignKey("answer.id"), nullable = False)
-	
-	questionnaire = db.relationship("Questionnaire", back_populates = "session")
-	answer = db.relationship("Answer", back_populates = "session")
