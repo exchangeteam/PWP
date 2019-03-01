@@ -32,16 +32,30 @@
 *ONLY USED BY COURSE STAFF: Additional comments from the course staff*
 
 ## Meeting 2.
-* **DATE:**
-* **ASSISTANTS:**
+* **DATE:*26.02.2019*
+* **ASSISTANTS:*Iván Sánchez Milara*
 * **GRADE:** *To be filled by course staff*
 
 ### Minutes
-*Summary of what was discussed during the meeting*
+ - The meeting took about 30 minutes.
+ - The teacher made some suggestions to make the application more usable.
+ - The teacher had some suggesetions on creating new details in the application.
 
 ### Action points
-*List here the actions points discussed with assistants*
+ - In the first question of deadline (Datbase Design),
+    - We need to create a table which will hold some sort of session log. We can call this table questionnaire-instance or session.
+    - This table will be used for retrieving the answers from one person. Otherwise, it is not clear which answer belongs to which user.
+    - This table should basically include questionnaire-id and answer-id.
+    - Also, in question table, attribute 'Title' looks a bit ambigious. We could rename it, but this is not mandatory.
 
+ - In the third question of deadline (Database Testing),
+    - We also need testing in an edge case. We can try testing to break nullable attributes.
+
+ - In general,
+    - The documentation in both wiki and in the project is neat and enough. We have good documentation in the application.
+    - Meeting notes are hold clear and good.
+    - We need to mention the usage of sqlite in README file.
+    - Also, the SQL dump is missing. It should be added to the repository.
 
 ### Comments from staff
 *ONLY USED BY COURSE STAFF: Additional comments from the course staff*
