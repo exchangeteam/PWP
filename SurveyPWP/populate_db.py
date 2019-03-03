@@ -12,7 +12,9 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor.close()
 
 def create_db():
-	
+	"""
+	Create the database tables and set everyting ready.
+	"""
 	db.create_all()
 	print("Database is created!")
 	print("--------------------")
@@ -57,7 +59,7 @@ def create_question(_title, _questionnaire, _description=""):
 def create_answer(_content, _question, _userName):
 	"""
 	Create an answer to one question.
-	Content of the answer is required.
+	Content of the answer and the username of the user are required.
 	It's also mandatory to put it into a specific questionnaire.
 	"""
 	answer = Answer(content = _content, question = _question, userName = _userName)
@@ -74,8 +76,8 @@ first_questionnaire = create_questionnaire("Birthday party for Ivan", "We are or
 first_question = create_question("Choose a date", first_questionnaire, "Between 1st of March and 4th of March, please tell us the dates you are available.")
 second_question = create_question("How many people are you coming with?", first_questionnaire)
 third_question = create_question("Is there any theme in your mind for the birthday party?", first_questionnaire)
-first_answer = create_answer("Everyday is okay!", first_question,"user1")
-second_answer = create_answer("Three people: Berke, Alina, Xiao", second_question,"user1")
-thirds_answer = create_answer("Star Wars theme.", third_question,"user1")
+first_answer = create_answer("Everyday is okay!", first_question, "user1")
+second_answer = create_answer("Three people: Berke, Alina, Xiao", second_question, "user1")
+thirds_answer = create_answer("Star Wars theme.", third_question, "user1")
 
 db.session.commit()

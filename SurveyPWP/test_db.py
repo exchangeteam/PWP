@@ -35,7 +35,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 
 def _get_questionnaire():
 	"""
-	An example of questionnair.
+	An example of questionnaire.
 	"""
 	questionnaire = Questionnaire(
 		title = "Birthday party for Ivan", 
@@ -110,9 +110,10 @@ def test_create_answer(db_handle):
 	db.session.commit()
 
 	assert Answer.query.count() == 1, "Creating question is failed."
+
 def test_null_questionnaire_title(db_handle):
 	"""
-
+	Tests whether a questionnaire can be created without a title or not.
 	"""
 	questionnaire = Questionnaire(description="this is a non-title test")
 	db.session.add(questionnaire)
@@ -121,7 +122,7 @@ def test_null_questionnaire_title(db_handle):
 
 def test_null_question_title(db_handle):
 	"""
-
+	Tests whether a question can be created without a title or not.
 	"""
 	questionnaire = _get_questionnaire()
 	question1 = Question(questionnaire=questionnaire,description="this is a non-title test")
@@ -133,6 +134,9 @@ def test_null_question_title(db_handle):
 		db.session.commit() 
 
 def test_null_answer(db_handle):
+	"""
+	Tests whether an answer can be created without its content or userName. 
+	"""
 	questionnaire = _get_questionnaire()
 	question = _get_question(questionnaire)
 	answer1 = Answer(question=question,userName="Non-content-tester")
@@ -363,3 +367,5 @@ def test_answer_filter2(db_handle):
 	query_answer = Answer.query.filter_by(content = "I am all busy")
 
 	assert query_answer.count() == 0
+
+# END OF TEST

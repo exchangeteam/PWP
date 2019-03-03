@@ -42,7 +42,7 @@
  - The teacher had some suggesetions on creating new details in the application.
 
 ### Action points
- - In the first question of deadline (Datbase Design),
+ - In the first question of deadline (Database Design),
     - We need to create a table which will hold some sort of session log. We can call this table questionnaire-instance or session.
     - This table will be used for retrieving the answers from one person. Otherwise, it is not clear which answer belongs to which user.
     - This table should basically include questionnaire-id and answer-id.

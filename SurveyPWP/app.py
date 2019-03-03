@@ -35,6 +35,7 @@ class Questionnaire(db.Model):
 	description = db.Column(db.String(512), nullable = True)
 
 	question = db.relationship("Question", back_populates = "questionnaire", cascade = "save-update, delete")
+
 """
 Table : Question
 ----------------------
@@ -65,6 +66,7 @@ Description : This table stores all the answers, and each answer belongs to a sp
 - 'id', INTEGER, PRIMARY KEY, Contains id of each answer.
 - 'question_id', INTEGER, FOREIGN KEY, NULLABLE, Contains id of the question.
 - 'content', STRING, MAX 512 Characters, NOT NULL, Contains the answer as a string.
+- 'userName', STRING, MAX 64 Characters, NOT NULL, Contains the username of the user.
 
 * 'question', RELATIONSHIP with the Question table.
 """
