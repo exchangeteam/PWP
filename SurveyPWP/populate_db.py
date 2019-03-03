@@ -1,4 +1,4 @@
-from app import db, Questionnaire, Question, Answer, Session
+from app import db, Questionnaire, Question, Answer
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
 from sqlite3 import Connection as SQLite3Connection
@@ -54,24 +54,15 @@ def create_question(_title, _questionnaire, _description=""):
 
 
 
-def create_answer(_content, _question,_questionnaire):
+def create_answer(_content, _question, _userName):
 	"""
 	Create an answer to one question.
 	Content of the answer is required.
 	It's also mandatory to put it into a specific questionnaire.
 	"""
-	answer = Answer(content = _content, question = _question)
-
-	def create_session(_answer,_questionnaire):
-		session = Session(questionnaire = _questionnaire, answer = _answer)
-		db.session.add(session)
-		print("session for questionnaire",_questionnaire,",answer ", _answer," created")
-		print("id:",session)
-		print("--------------------")
-
-	create_session(answer,_questionnaire)
+	answer = Answer(content = _content, question = _question, userName = _userName)
 	db.session.add(answer)
-	print("A new answer is created.")
+	print("A new answer is created by", _userName)
 	print("Content: ", _content)
 	print("--------------------")
 	return answer
@@ -83,8 +74,8 @@ first_questionnaire = create_questionnaire("Birthday party for Ivan", "We are or
 first_question = create_question("Choose a date", first_questionnaire, "Between 1st of March and 4th of March, please tell us the dates you are available.")
 second_question = create_question("How many people are you coming with?", first_questionnaire)
 third_question = create_question("Is there any theme in your mind for the birthday party?", first_questionnaire)
-first_answer = create_answer("Everyday is okay!", first_question,first_questionnaire)
-second_answer = create_answer("Three people: Berke, Alina, Xiao", second_question,first_questionnaire)
-thirds_answer = create_answer("Star Wars theme.", third_question,first_questionnaire)
+first_answer = create_answer("Everyday is okay!", first_question,"user1")
+second_answer = create_answer("Three people: Berke, Alina, Xiao", second_question,"user1")
+thirds_answer = create_answer("Star Wars theme.", third_question,"user1")
 
 db.session.commit()

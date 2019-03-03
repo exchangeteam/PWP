@@ -2,7 +2,7 @@ import app as app
 import populate_db as populate
 import pytest, os, tempfile
 from app import db, Questionnaire, Question, Answer
-from sqlalchemy import event, update
+from sqlalchemy import event, update, exc
 from sqlalchemy.engine import Engine
 from sqlite3 import Connection as SQLite3Connection
 
@@ -56,16 +56,23 @@ def _get_question(_questionnaire):
 
 	return question
 
-def _get_answer(_question):
+def _get_answer(_question,_userName):
 	"""
 	An example of answer to a specific question
 	"""
 	answer = Answer(
 		content = "Everyday is okay!",
-		question = _question
+		question = _question,
+		userName = _userName
 		)
-
 	return answer
+
+def _get_userName(option=0):
+	"""
+	Example of userNames.
+	"""
+	userName = ["A","B","C","user4","user5"]
+	return userName[option]
 
 #error scenarios
 def test_create_questionnaire(db_handle):
@@ -96,13 +103,48 @@ def test_create_answer(db_handle):
 	"""
 	questionnaire = _get_questionnaire()
 	question = _get_question(questionnaire)
-	answer = _get_answer(question)
+	answer = _get_answer(question,_get_userName(0))
 	db.session.add(questionnaire)
 	db.session.add(question)
 	db.session.add(answer)
 	db.session.commit()
 
 	assert Answer.query.count() == 1, "Creating question is failed."
+def test_null_questionnaire_title(db_handle):
+	"""
+
+	"""
+	questionnaire = Questionnaire(description="this is a non-title test")
+	db.session.add(questionnaire)
+	with pytest.raises(exc.IntegrityError):
+		db.session.commit() 
+
+def test_null_question_title(db_handle):
+	"""
+
+	"""
+	questionnaire = _get_questionnaire()
+	question1 = Question(questionnaire=questionnaire,description="this is a non-title test")
+	question2 = Question(title="test",description="this is a non-questionnaire test")
+	db.session.add(questionnaire)
+	db.session.add(question1)
+	db.session.add(question2)
+	with pytest.raises(exc.IntegrityError):
+		db.session.commit() 
+
+def test_null_answer(db_handle):
+	questionnaire = _get_questionnaire()
+	question = _get_question(questionnaire)
+	answer1 = Answer(question=question,userName="Non-content-tester")
+	answer2 = Answer(content = "This is a non-question test",userName = "Non-userName-tester")
+	answer3 = Answer(question = question,content ="This is a non-userName test")
+	db.session.add(questionnaire)
+	db.session.add(question)
+	db.session.add(answer1)
+	db.session.add(answer2)
+	db.session.add(answer3)
+	with pytest.raises(exc.IntegrityError):
+		db.session.commit() 
 
 def test_delete_questionnaire(db_handle):
 	"""
@@ -140,7 +182,7 @@ def test_delete_answer(db_handle):
 	"""
 	questionnaire = _get_questionnaire()
 	question = _get_question(questionnaire)
-	answer = _get_answer(question)
+	answer = _get_answer(question,_get_userName(0))
 	db.session.add(questionnaire)
 	db.session.add(question)
 	db.session.add(answer)
@@ -159,7 +201,7 @@ def test_question_ondelete_answer(db_handle):
 	"""
 	questionnaire = _get_questionnaire()
 	question = _get_question(questionnaire)
-	answer = _get_answer(question)
+	answer = _get_answer(question,_get_userName(0))
 	db.session.add(questionnaire)
 	db.session.add(question)
 	db.session.add(answer)
@@ -178,7 +220,7 @@ def test_question_ondelete_answer(db_handle):
 	"""
 	questionnaire = _get_questionnaire()
 	question = _get_question(questionnaire)
-	answer = _get_answer(question)
+	answer = _get_answer(question,_get_userName(0))
 	db.session.add(questionnaire)
 	db.session.add(question)
 	db.session.add(answer)
@@ -226,7 +268,7 @@ def test_update_answer(db_handle):
 	"""
 	questionnaire = _get_questionnaire()
 	question = _get_question(questionnaire)
-	answer = _get_answer(question)
+	answer = _get_answer(question,_get_userName(0))
 	db.session.add(questionnaire)
 	db.session.add(question)
 	db.session.add(answer)
@@ -296,7 +338,7 @@ def test_answer_filter1(db_handle):
 	"""
 	questionnaire = _get_questionnaire()
 	question = _get_question(questionnaire)
-	answer = _get_answer(question)
+	answer = _get_answer(question,_get_userName(0))
 	db.session.add(questionnaire)
 	db.session.add(question)
 	db.session.add(answer)
@@ -312,7 +354,7 @@ def test_answer_filter2(db_handle):
 	"""
 	questionnaire = _get_questionnaire()
 	question = _get_question(questionnaire)
-	answer = _get_answer(question)
+	answer = _get_answer(question,_get_userName(1))
 	db.session.add(questionnaire)
 	db.session.add(question)
 	db.session.add(answer)
