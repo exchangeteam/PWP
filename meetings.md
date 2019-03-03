@@ -32,8 +32,8 @@
 *ONLY USED BY COURSE STAFF: Additional comments from the course staff*
 
 ## Meeting 2.
-* **DATE:*26.02.2019*
-* **ASSISTANTS:*Iván Sánchez Milara*
+* **DATE: 26.02.2019**
+* **ASSISTANTS: Iván Sánchez Milara**
 * **GRADE:** *To be filled by course staff*
 
 ### Minutes
