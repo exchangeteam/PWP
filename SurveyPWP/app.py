@@ -345,6 +345,7 @@ class QuestionnaireCollection(Resource):
         )
         body.add_namespace("survey", LINK_RELATIONS_URL)
         body.add_control("self", "/api/questionnaires/")
+        #body.add_control("answer-to-questionnaire", "/api/questionnaire/{}/")
         body.add_control_add_questionnaire()
             
         return Response(json.dumps(body), 200, mimetype=MASON)
@@ -374,11 +375,8 @@ class QuestionnaireCollection(Resource):
             db.session.add(questionnaire)
             db.session.commit()
             questionanire_id = questionnaire.id
-        
-        print(questionanire_id)
-        #questionnaire = Questionnaire.query.filter_by(title = request.json["title"]).first()
+            
         return Response(status=201, headers={"Location":"/api/questionnaires/{}/".format(questionanire_id)})
-        #return Response(status = 201, headers={"Location":api.url_for(QuestionnaireItem, id = questionnaire_id)})
 
 api.add_resource(QuestionnaireCollection, "/api/questionnaires/")
 
@@ -397,7 +395,6 @@ class QuestionnaireItem(Resource):
 		body.add_control("profile", QUESTIONNAIRE_PROFILE)
 		body.add_control("collection", "/api/questionnaires/")
 		body.add_control("question-of", api.url_for(QuestionCollection, questionnaire_id = id))
-		#body.add_control("answer-of-user-in-questionnaire")
 		body.add_control_edit_questionnaire(id)
 		body.add_control_delete_questionnaire(id)
 		
@@ -461,7 +458,7 @@ class QuestionCollection(Resource):
         )
         body.add_namespace("survey", LINK_RELATIONS_URL)
         body.add_control("self", api.url_for(QuestionCollection, questionnaire_id = questionnaire_id))
-        body.add_control_all_questionnaires()
+        body.add_control("questionnaire-with", "/api/questionnaires/{}/questions/".format(questionnaire_id))
         body.add_control_add_question(questionnaire_id)
             
         return Response(json.dumps(body), 200, mimetype=MASON)
@@ -479,6 +476,7 @@ class QuestionCollection(Resource):
         if questionnaire is None:
             return MasonBuilder.create_error_response(404, "Not found", "No Questionnaire with the id {}".format(questionnaire_id))
 		
+        question_id = ''
         try:
             question = Question(
                 questionnaire_id = questionnaire_id,
@@ -487,6 +485,7 @@ class QuestionCollection(Resource):
             )
             db.session.add(question)
             db.session.commit()
+            question_id = question.id
         
         except KeyError:
             question = Question(
@@ -495,9 +494,9 @@ class QuestionCollection(Resource):
 			)
             db.session.add(question)
             db.session.commit()
+            question_id = question.id
         
-        question = Question.query.filter_by(title = request.json["title"]).first()
-        return Response(status = 201, headers={"Location":"/api/questionnaires/{}/questions/{}".format(questionnaire_id, question.id)})
+        return Response(status = 201, headers={"Location":"/api/questionnaires/{}/questions/{}".format(questionnaire_id, question_id)})
 
 api.add_resource(QuestionCollection, "/api/questionnaires/<questionnaire_id>/questions/")
 
@@ -578,7 +577,7 @@ class QuestionItem(Resource):
         for q in questions:
             idOfQuestions.append(q.id)
         if int(id) not in idOfQuestions:
-            return MasonBuilder.create_error_response(406, "Not found", "The question with id {} does not belong to questionnaire {}".format(id, questionnaire_id))
+            return MasonBuilder.create_error_response(408, "Do not match", "The question with id {} does not belong to questionnaire {}".format(id, questionnaire_id))
 			
         db.session.delete(db_question)
         db.session.commit()
@@ -621,6 +620,7 @@ class AnswerCollection(Resource):
         )
         body.add_namespace("survey", LINK_RELATIONS_URL)
         body.add_control("self", "/api/questionnaires/{}/questions/{}/answers/".format(questionnaire_id, question_id))
+        body.add_control("question-with", "/api/questionnaires/{}/questions/{}/".format(questionnaire_id, question_id))
         body.add_control_add_answer(questionnaire_id, question_id)
             
         return Response(json.dumps(body), 200, mimetype=MASON)
@@ -649,6 +649,7 @@ class AnswerCollection(Resource):
         if int(question_id) not in idOfQuestions:
             return MasonBuilder.create_error_response(408, "Do not match", "The question with id {} does not belong to questionnaire {}".format(question_id, questionnaire_id))
 			
+        answer_id = ''
         answer = Answer(
             question_id = question_id,
             content = request.json["content"],
@@ -656,8 +657,9 @@ class AnswerCollection(Resource):
         )
         db.session.add(answer)
         db.session.commit()
+        answer_id = answer.id
     
-        return Response(status = 201)
+        return Response(status = 204, headers={"Location": "/api/questionnaires/{}/questions/{}/answers/{}".format(questionanire_id, question_id, answer_id)})
 
 api.add_resource(AnswerCollection, "/api/questionnaires/<questionnaire_id>/questions/<question_id>/answers/")
 
@@ -686,7 +688,7 @@ class AnswerItem(Resource):
         for a in answers:
             idOfAnswers.append(a.id)
         if int(id) not in idOfAnswers:
-            return MasonBuilder.create_error_response(408, "Do not match", "The answer with id {} does not belong to question {}".format(id, question_id))
+            return MasonBuilder.create_error_response(409, "Do not match", "The answer with id {} does not belong to question {}".format(id, question_id))
 		
         body = InventoryBuilder(
             id = db_answer.id,
@@ -698,8 +700,6 @@ class AnswerItem(Resource):
         body.add_control("self","/api/questionnaires/{}/questions/{}/answers/{}/".format(questionnaire_id, question_id, id))
         body.add_control("profile", ANSWER_PROFILE)
         body.add_control("collection", "/api/questionnaires/{}/questions/{}/answers/".format(questionnaire_id, question_id))
-        body.add_control("answer-of-users", api.url_for(AnswerOfUser, userName = db_answer.userName))
-        body.add_control("answer-of-users-to-questionnaire", "/api/questionnaires/{}/answers/{}/".format(questionnaire_id, db_answer.userName))
         body.add_control_edit_answer(questionnaire_id, question_id, id)
         body.add_control_delete_answer(questionnaire_id, question_id, id)
         
@@ -729,7 +729,7 @@ class AnswerItem(Resource):
         for a in answers:
             idOfAnswers.append(a.id)
         if int(id) not in idOfAnswers:
-            return MasonBuilder.create_error_response(408, "Do not match", "The answer with id {} does not belong to question {}".format(id, question_id))
+            return MasonBuilder.create_error_response(409, "Do not match", "The answer with id {} does not belong to question {}".format(id, question_id))
 		
         if not request.json:
             return MasonBuilder.create_error_response(415, "Unsupported media type", "Request must be JSON")
@@ -763,41 +763,19 @@ class AnswerItem(Resource):
         if db_answer is None:
             return MasonBuilder.create_error_response(406, "Not found", "No answer was found with the id {}".format(id))
         
+        answers = Answer.query.filter_by(question_id = question_id).all()
+        idOfAnswers = []
+        for a in answers:
+            idOfAnswers.append(a.id)
+        if int(id) not in idOfAnswers:
+            return MasonBuilder.create_error_response(409, "Do not match", "The answer with id {} does not belong to question {}".format(id, question_id))
+		
         db.session.delete(db_answer)
         db.session.commit()
 			
         return Response(status = 204, headers={"Location":"/api/questionnaires/{}/questions/{}/answers/{}/".format(questionnaire_id, question_id, id)})
         
 api.add_resource(AnswerItem, "/api/questionnaires/<questionnaire_id>/questions/<question_id>/answers/<id>/")
-
-class AnswerOfUser(Resource):
-	def get(self, userName):
-		db_answer = Answer.query.filter_by(userName = userName).first()
-		if db_answer is None:
-			return MasonBuilder.create_error_response(404, "Not found", "No user with name {}".format(userName))
-		
-		answers = Answer.query.filter_by(userName = userName).all()
-		items=[]
-		for item in answers:
-			answer = InventoryBuilder(
-                id = item.id,
-                question_id = item.question_id,
-			    content = item.content,
-			    userName = item.userName
-			)
-			answer.add_control("self", api.url_for(AnswerOfUser, userName = userName))
-			answer.add_control("profile", ANSWER_PROFILE)
-			items.append(answer)
-		
-		body = InventoryBuilder(
-		    items = items
-		)
-		body.add_namespace("survey", LINK_RELATIONS_URL)
-		body.add_control("self", api.url_for(AnswerOfUser, userName = userName))
-		
-		return Response(json.dumps(body), 200, mimetype=MASON)
-		
-api.add_resource(AnswerOfUser, "/api/answers/<userName>/")
 
 class AnswerOfUserToQuestionnaire(Resource):
     def get(self, questionnaire_id, userName):
