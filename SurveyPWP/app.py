@@ -19,7 +19,7 @@ db = SQLAlchemy(app)
 
 QUESTIONNAIRE_PROFILE = "/profiles/questionnaire/"
 QUESTION_PROFILE = "/profiles/question/"
-ANSWER_PROFILE = "/profile/answer/"
+ANSWER_PROFILE = "/profiles/answer/"
 LINK_RELATIONS_URL = "/survey/link-relations/"
 ERROR_PROFILE = "/profiles/error/"
 MASON = "application/vnd.mason+json"
@@ -301,7 +301,7 @@ class InventoryBuilder(MasonBuilder):
 	def add_control_edit_answer(self, questionnaire_id, question_id, id):
 		self.add_control(
 		    "edit",
-		    "/api/questionnaires/{}/questions/{}/answers/{}".format(questionnaire_id, question_id, id),
+		    "/api/questionnaires/{}/questions/{}/answers/{}/".format(questionnaire_id, question_id, id),
 		    method="PUT",
 		    encoding="json",
 		    title="Edit this answer",
@@ -496,7 +496,7 @@ class QuestionCollection(Resource):
             db.session.commit()
             question_id = question.id
         
-        return Response(status = 201, headers={"Location":"/api/questionnaires/{}/questions/{}".format(questionnaire_id, question_id)})
+        return Response(status = 201, headers={"Location":"/api/questionnaires/{}/questions/{}/".format(questionnaire_id, question_id)})
 
 api.add_resource(QuestionCollection, "/api/questionnaires/<questionnaire_id>/questions/")
 
@@ -659,7 +659,7 @@ class AnswerCollection(Resource):
         db.session.commit()
         answer_id = answer.id
     
-        return Response(status = 204, headers={"Location": "/api/questionnaires/{}/questions/{}/answers/{}".format(questionanire_id, question_id, answer_id)})
+        return Response(status = 201, headers={"Location": "/api/questionnaires/{}/questions/{}/answers/{}/".format(questionnaire_id, question_id, answer_id)})
 
 api.add_resource(AnswerCollection, "/api/questionnaires/<questionnaire_id>/questions/<question_id>/answers/")
 
@@ -821,3 +821,43 @@ class AnswerOfUserToQuestionnaire(Resource):
         return Response(json.dumps(body), 200, mimetype=MASON)
 
 api.add_resource(AnswerOfUserToQuestionnaire, "/api/questionnaires/<questionnaire_id>/answers/<userName>/")
+
+@app.route("/profiles/questionnaire/")
+def profilesforquestionnaire():
+	return "", 200
+
+@app.route("/profiles/question/")
+def profilesforquestion():
+	return "", 200
+	
+@app.route("/profiles/answer/")
+def profilesforanswer():
+	return "", 200
+
+@app.route("/profiles/error/")
+def profilesforerror():
+	return "", 200
+
+@app.route("/survey/link-relations/")
+def relations():
+	return "", 200
+
+# @app.route("/profiles/questionnaire/")
+# def profilesQn():
+# 	return "", 200
+
+# @app.route("/profiles/question/")
+# def profiles():
+# 	return "", 200
+	
+# @app.route("/profiles/answer/")
+# # def profiles():
+# # 	return "", 200
+
+# @app.route("/profiles/error/")
+# def profiles():
+# 	return "", 200
+
+# @app.route("/survey/link-relations/")
+# def relations():
+# 	return "", 200

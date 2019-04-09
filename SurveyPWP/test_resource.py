@@ -60,7 +60,6 @@ def _check_namespace(client, response):
     Checks that the "survey" namespace is found from the response body, and
     that its "name" attribute is a URL that can be accessed.
     """
-    
     ns_href = response["@namespaces"]["survey"]["name"]
     resp = client.get(ns_href)
     assert resp.status_code == 200
@@ -85,7 +84,10 @@ def _get_questionnaire_json(number=1):
 def _get_question_json(number=1):
     return {"title": "test-question-{}".format(number), "description": "test-question"}
 
-def _check_control_put_method(ctrl, client, obj):
+def _get_answer_json(number=1):
+    return {"userName":"test-user-{}".format(number),"content":"test-answer-content"}
+
+def _check_control_put_method(ctrl, client, obj, putType):
     """
     Checks a PUT type control from a JSON object be it root document or an item
     in a collection. In addition to checking the "href" attribute, also checks
@@ -102,8 +104,12 @@ def _check_control_put_method(ctrl, client, obj):
     schema = ctrl_obj["schema"]
     assert method == "put"
     assert encoding == "json"
-    body = _get_sensor_json()
-    body["name"] = obj["name"]
+    print(href)
+    body = _get_questionnaire_json()
+    if putType == "question":
+        body = _get_question_json()
+    elif putType == "answer":
+        body = _get_answer_json()
     validate(body, schema)
     resp = client.put(href, json=body)
     assert resp.status_code == 204
@@ -118,6 +124,10 @@ def _check_control_post_method(ctrl, client, obj):
     assert method == "post"
     assert encoding == "json"
     body = _get_questionnaire_json()
+    if ctrl.endswith("question"):
+        body = _get_question_json()
+    elif ctrl.endswith("answer"):
+        body = _get_answer_json()
     validate(body, schema)
     resp = client.post(href, json=body)
     assert resp.status_code == 201
@@ -139,7 +149,7 @@ class TestQuestionnaireCollection(object):
         resp = client.get(self.RESOURCE_URL)
         assert resp.status_code == 200
         body = json.loads(resp.data)
-        # _check_namespace(client, body)
+        _check_namespace(client, body)
         _check_control_post_method("survey:add-questionnaire", client, body)
         assert len(body["items"]) == 1
         for item in body["items"]:
@@ -158,8 +168,10 @@ class TestQuestionnaireCollection(object):
 
         # test with valid and see that it exists afterward
         resp = client.post(self.RESOURCE_URL, json=valid)
+        body = json.loads(client.get(self.RESOURCE_URL).data)
+        id = body["items"][-1]["id"]
         assert resp.status_code == 201
-        assert resp.headers["Location"].endswith(self.RESOURCE_URL + valid["title"] + "/")
+        assert resp.headers["Location"].endswith(self.RESOURCE_URL + str(id) + "/")
         resp = client.get(resp.headers["Location"])
         assert resp.status_code == 200
         body = json.loads(resp.data)
@@ -192,10 +204,10 @@ class TestQuestionnaireItem(object):
         body = json.loads(resp.data)
         assert body["title"] == "test-questionnaire-1"
         assert body["description"] == "test-questionnaire"
-        # _check_namespace(client, body)
+        _check_namespace(client, body)
         _check_control_get_method("profile", client, body)
         _check_control_get_method("collection", client, body)
-        _check_control_put_method("edit", client, body)
+        _check_control_put_method("edit", client, body,"questionnaire")
         _check_control_delete_method("survey:delete", client, body)
         resp = client.get(self.INVALID_URL)
         assert resp.status_code == 404
@@ -210,7 +222,7 @@ class TestQuestionnaireItem(object):
 
         # test with another url
         resp = client.put(self.INVALID_URL, json=valid)
-        assert resp.status_code == 409
+        assert resp.status_code == 404
 
         # test with wrong content type
         resp = client.put(self.RESOURCE_URL, data=json.dumps(valid))
@@ -219,11 +231,11 @@ class TestQuestionnaireItem(object):
         # remove field title for 400
         valid.pop("title")
         resp = client.post(self.RESOURCE_URL, json=valid)
-        assert resp.status_code == 400
+        assert resp.status_code == 405
 
-        valid = _get_sensor_json()
+        valid = _get_questionnaire_json()
         resp = client.put(self.RESOURCE_URL, json=valid)
-        resp = client.get(self.MODIFIED_URL)
+        resp = client.get(self.RESOURCE_URL)
         assert resp.status_code == 200
         body = json.loads(resp.data)
         assert body["title"] == valid["title"] and body["description"] == valid["description"]
@@ -245,18 +257,19 @@ class TestQuestionnaireItem(object):
 
 
 class TestQuestionsByQuestionnaire(object):
-    RESOURCE_URL = "/api/questionnaire/1/questions/"
-    INVALID_URL = "/api/questionnaire/-1/questions/"
+    RESOURCE_URL = "/api/questionnaires/1/questions/"
+    INVALID_URL = "/api/questionnaires/-1/questions/"
 
     def test_get(self,client):
         """Tests for questions by questionnaire GET method."""
         resp = client.get(self.RESOURCE_URL)
         assert resp.status_code == 200
         body = json.loads(resp.data)
-        # _check_namespace(client, body)
+        _check_namespace(client, body)
         _check_control_post_method("survey:add-question", client, body)
-        assert len(body["items"]) == 3
+        assert len(body["items"]) == 2
         for item in body["items"]:
+            print(item)
             _check_control_get_method("self", client, item)
             _check_control_get_method("profile", client, item)
             assert "title" in item
@@ -271,8 +284,10 @@ class TestQuestionsByQuestionnaire(object):
 
         # test with valid and see that it exists afterward
         resp = client.post(self.RESOURCE_URL, json=valid)
+        body = json.loads(client.get(self.RESOURCE_URL).data)
+        id = body["items"][-1]["id"]
         assert resp.status_code == 201
-        assert resp.headers["Location"].endswith(self.RESOURCE_URL + valid["title"] + "/")
+        assert resp.headers["Location"].endswith(self.RESOURCE_URL + str(id) + "/")
         resp = client.get(resp.headers["Location"])
         assert resp.status_code == 200
         body = json.loads(resp.data)
@@ -284,14 +299,14 @@ class TestQuestionsByQuestionnaire(object):
         assert resp.status_code == 404
 
         # remove field title for 400
-        valid = _get_sensor_json()
+        valid = _get_question_json()
         valid.pop("title")
         resp = client.post(self.RESOURCE_URL, json=valid)
         assert resp.status_code == 400
 
 class TestQuestionItem(object):
-    RESOURCE_URL = "/api/questionnaires/1/question/1/"
-    INVALID_URL = "/api/quesitonnaires/1/question/-1/"
+    RESOURCE_URL = "/api/questionnaires/1/questions/1/"
+    INVALID_URL = "/api/quesitonnaires/1/questions/-1/"
 
     def test_get(self,client):
         """
@@ -303,15 +318,15 @@ class TestQuestionItem(object):
         resp = client.get(self.RESOURCE_URL)
         assert resp.status_code == 200
         body = json.loads(resp.data)
-        assert "title" in body["item"]
-        assert "description" in body["item"]
-        # _check_namespace(client, body)
+        assert "title" in body
+        assert "description" in body
+        _check_namespace(client, body)
         _check_control_get_method("profile", client, body)
         _check_control_get_method("collection", client, body)
-        _check_control_put_method("edit", client, body)
+        _check_control_put_method("edit", client, body,"question")
         _check_control_delete_method("survey:delete", client, body)
         resp = client.get(self.INVALID_URL)
-        assert status_code == 404
+        assert resp.status_code == 404
             
     def test_put(self,client):
         """Test for valid PUT method"""
@@ -323,20 +338,20 @@ class TestQuestionItem(object):
 
         # test with another url
         resp = client.put(self.INVALID_URL, json=valid)
-        assert resp.status_code == 409
+        assert resp.status_code == 404
 
         # test with wrong content type
         resp = client.put(self.RESOURCE_URL, data=json.dumps(valid))
         assert resp.status_code == 415
 
-        # remove field title for 400
+        # remove field title for 405
         valid.pop("title")
         resp = client.post(self.RESOURCE_URL, json=valid)
-        assert resp.status_code == 400
+        assert resp.status_code == 405
 
-        valid = _get_sensor_json()
+        valid = _get_question_json()
         resp = client.put(self.RESOURCE_URL, json=valid)
-        resp = client.get(self.MODIFIED_URL)
+        resp = client.get(self.RESOURCE_URL)
         assert resp.status_code == 200
         body = json.loads(resp.data)
         assert body["title"] == valid["title"] and body["description"] == valid["description"]
@@ -351,13 +366,13 @@ class TestQuestionItem(object):
         resp = client.delete(self.RESOURCE_URL)
         assert resp.status_code == 204
         resp = client.get(self.RESOURCE_URL)
-        assert resp.status_code == 404
+        assert resp.status_code == 405
         resp = client.delete(self.INVALID_URL)
         assert resp.status_code == 404
 
 class TestAnswersToQuestion(object):
-    RESOURCE_URL = "/api/questionnaire/1/questions/1/answers/"
-    INVALID_URL = "/api/questionnaire/1/questions/-1/answers/"
+    RESOURCE_URL = "/api/questionnaires/1/questions/1/answers/"
+    INVALID_URL = "/api/questionnaires/1/questions/-1/answers/"
 
     def test_get(self,client):
         """
@@ -369,17 +384,17 @@ class TestAnswersToQuestion(object):
         resp = client.get(self.RESOURCE_URL)
         assert resp.status_code == 200
         body = json.loads(resp.data)
-        # _check_namespace(client, body)
+        _check_namespace(client, body)
         _check_control_post_method("survey:add-answer", client, body)
-        assert len(body["items"]) == 3
+        assert len(body["items"]) == 1
         for item in body["items"]:
             _check_control_get_method("self", client, item)
             _check_control_get_method("profile", client, item)
-            assert "title" in item
-            assert "description" in item
+            assert "content" in item
+            assert "userName" in item
 
     def test_post(self, client): 
-        valid = _get_question_json()
+        valid = _get_answer_json()
 
         # test with wrong content type
         resp = client.post(self.RESOURCE_URL, data=json.dumps(valid))
@@ -387,27 +402,29 @@ class TestAnswersToQuestion(object):
 
         # test with valid and see that it exists afterward
         resp = client.post(self.RESOURCE_URL, json=valid)
+        body = json.loads(client.get(self.RESOURCE_URL).data)
+        id = body["items"][-1]["id"]
         assert resp.status_code == 201
-        assert resp.headers["Location"].endswith(self.RESOURCE_URL + valid["title"] + "/")
+        assert resp.headers["Location"].endswith(self.RESOURCE_URL + str(id) + "/")
         resp = client.get(resp.headers["Location"])
         assert resp.status_code == 200
         body = json.loads(resp.data)
-        assert body["title"] == "test-question-1"
-        assert body["description"] == "new-question"
+        assert body["content"] == "test-answer-content"
+        assert body["userName"] == "test-user-1"
 
         # test with invalid url
         resp = client.post(self.INVALID_URL, json=valid)
-        assert resp.status_code == 404
+        assert resp.status_code == 405
 
         # remove field title for 400
-        valid = _get_sensor_json()
-        valid.pop("title")
+        valid = _get_answer_json()
+        valid.pop("userName")
         resp = client.post(self.RESOURCE_URL, json=valid)
         assert resp.status_code == 400
 
 class TestAnswerItem(object):
-    RESOURCE_URL = "/api/questionnaires/1/question/1/answers/1/"
-    INVALID_URL = "/api/quesitonnaires/1/question/1/answers/-1/"
+    RESOURCE_URL = "/api/questionnaires/1/questions/1/answers/1/"
+    INVALID_URL = "/api/quesitonnaires/1/questions/1/answers/-1/"
 
     def test_get(self,client):
         """
@@ -419,19 +436,19 @@ class TestAnswerItem(object):
         resp = client.get(self.RESOURCE_URL)
         assert resp.status_code == 200
         body = json.loads(resp.data)
-        assert "title" in body["item"]
-        assert "description" in body["item"]
-        # _check_namespace(client, body)
+        assert body["userName"] == "test-user-1"
+        assert body["content"] == "test-answer"
+        _check_namespace(client, body)
         _check_control_get_method("profile", client, body)
         _check_control_get_method("collection", client, body)
-        _check_control_put_method("edit", client, body)
+        _check_control_put_method("edit", client, body,"answer")
         _check_control_delete_method("survey:delete", client, body)
         resp = client.get(self.INVALID_URL)
-        assert status_code == 404
+        assert resp.status_code == 404
             
     def test_put(self,client):
         """Test for valid PUT method"""
-        valid = _get_question_json()
+        valid = _get_answer_json()
 
         # test with valid
         resp = client.put(self.RESOURCE_URL,json=valid)
@@ -439,7 +456,7 @@ class TestAnswerItem(object):
 
         # test with another url
         resp = client.put(self.INVALID_URL, json=valid)
-        assert resp.status_code == 409
+        assert resp.status_code == 404
 
         # test with wrong content type
         resp = client.put(self.RESOURCE_URL, data=json.dumps(valid))
@@ -448,15 +465,15 @@ class TestAnswerItem(object):
         # remove field for 400
         valid.pop("userName")
         resp = client.post(self.RESOURCE_URL, json=valid)
-        assert resp.status_code == 400
-        valid = _get_qeustion_json()
+        assert resp.status_code == 405
+        valid = _get_answer_json()
         valid.pop("content")
         resp = client.post(self.RESOURCE_URL, json=valid)
-        assert resp.status_code == 400
+        assert resp.status_code == 405
 
-        valid = _get_sensor_json()
+        valid = _get_answer_json()
         resp = client.put(self.RESOURCE_URL, json=valid)
-        resp = client.get(self.MODIFIED_URL)
+        resp = client.get(self.RESOURCE_URL)
         assert resp.status_code == 200
         body = json.loads(resp.data)
         assert body["userName"] == valid["userName"] and body["content"] == valid["content"]
@@ -471,6 +488,6 @@ class TestAnswerItem(object):
         resp = client.delete(self.RESOURCE_URL)
         assert resp.status_code == 204
         resp = client.get(self.RESOURCE_URL)
-        assert resp.status_code == 404
+        assert resp.status_code == 406
         resp = client.delete(self.INVALID_URL)
         assert resp.status_code == 404
