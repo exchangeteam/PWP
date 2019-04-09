@@ -1,2 +1,2 @@
-web: python SurveyPWP/app.py
+web: gunicorn app:app
 
