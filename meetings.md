@@ -61,8 +61,8 @@
 *ONLY USED BY COURSE STAFF: Additional comments from the course staff*
 
 ## Meeting 3.
-* **DATE:28.03.2019**
-* **ASSISTANTS:Iván Sánchez Milara**
+* **DATE: 28.03.2019**
+* **ASSISTANTS: Iván Sánchez Milara**
 * **GRADE:** *To be filled by course staff*
 
 ### Minutes
@@ -73,7 +73,7 @@
 
 ### Action points
  - In the first question of deadline (Resources and relations),
-    - Some relations such as "questionnaire-with" are misleading, we should make it more clear.
+    - Some relations such as "questionnaire-with" are misleading, we should make them more clear.
     - Some relations suah as "question-of" and "answer-to" are wrong, we should change them to "collection".
     - "Answer of one user" and "Answer of one user to one questionnaire" are two resources having unclear relations with other resources, we can remove these two resources or find some new and correct relations.
     - The "Entry point" is missing, we should add an entry point which leads to a collection of all of the questionnaires.
@@ -81,14 +81,14 @@
 - In the third question of deadline (API design),
     - In the documentation of API, all of the relations should be shown in the state diagram, we should check it.
     - We should use some existing urls as the href for profiles.
-    - We should add more error responses for each functions.
+    - We should add more error responses for each function.
     - We can change the "mumeta" in "@namespaces", but it is not mandatory.
 
 - In the last question of deadline (REST conformance),
-    - We should give more examples of our API to make the conformance clearer.
+    - We should give more examples of our API to make the conformance justified.
 
 - In general,
-    - The documentation in both wiki and in the project is neat and enough. And we have the enough amounts of resources.
+    - The documentation in both wiki and in the project is neat and enough. And we have enough amounts of resources.
     - Meeting notes are hold clear and good.
 
 ### Comments from staff
