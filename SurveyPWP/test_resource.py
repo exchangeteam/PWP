@@ -33,7 +33,8 @@ def client():
 
 def _populate_db():
     """
-    Pre-populate database with 1 questionnaire, 3 questions and 3 answers.
+    Pre-populate database with 1 questionnaire, 3 questions on this questionnaire 
+    and 1 answer for each question.
     """
     _questionnaire = Questionnaire(
         title="test-questionnaire-1",
@@ -86,36 +87,17 @@ def _get_question_json(number=1):
 
 def _get_answer_json(number=1):
     return {"userName":"test-user-{}".format(number),"content":"test-answer-content"}
-
-def _check_control_put_method(ctrl, client, obj, putType):
-    """
-    Checks a PUT type control from a JSON object be it root document or an item
-    in a collection. In addition to checking the "href" attribute, also checks
-    that method, encoding and schema can be found from the control. Also
-    validates a valid sensor against the schema of the control to ensure that
-    they match. Finally checks that using the control results in the correct
-    status code of 204.
-    """
-    
-    ctrl_obj = obj["@controls"][ctrl]
-    href = ctrl_obj["href"]
-    method = ctrl_obj["method"].lower()
-    encoding = ctrl_obj["encoding"].lower()
-    schema = ctrl_obj["schema"]
-    assert method == "put"
-    assert encoding == "json"
-    print(href)
-    body = _get_questionnaire_json()
-    if putType == "question":
-        body = _get_question_json()
-    elif putType == "answer":
-        body = _get_answer_json()
-    validate(body, schema)
-    resp = client.put(href, json=body)
-    assert resp.status_code == 204
     
 
 def _check_control_post_method(ctrl, client, obj):
+    """
+    Checks a POST type control from a JSON object be it root document or an item
+    in a collection. In addition to checking the "href" attribute, also checks
+    that method, encoding and schema can be found from the control. Also
+    validates a valid questionnaire/question/answer against the schema of the control to ensure that
+    they match. Finally checks that using the control results in the correct
+    status code of 201.
+    """
     ctrl_obj = obj["@controls"][ctrl]
     href = ctrl_obj["href"]
     method = ctrl_obj["method"].lower()
@@ -131,6 +113,33 @@ def _check_control_post_method(ctrl, client, obj):
     validate(body, schema)
     resp = client.post(href, json=body)
     assert resp.status_code == 201
+
+def _check_control_put_method(ctrl, client, obj, putType):
+    """
+    Checks a PUT type control from a JSON object be it root document or an item
+    in a collection. In addition to checking the "href" attribute, also checks
+    that method, encoding and schema can be found from the control. Also
+    validates a valid questionnaire/question/answer against the schema of the control to ensure that
+    they match. Finally checks that using the control results in the correct
+    status code of 204.
+    This function get paramater putType which represent the item that is being edited.
+    """
+    
+    ctrl_obj = obj["@controls"][ctrl]
+    href = ctrl_obj["href"]
+    method = ctrl_obj["method"].lower()
+    encoding = ctrl_obj["encoding"].lower()
+    schema = ctrl_obj["schema"]
+    assert method == "put"
+    assert encoding == "json"
+    body = _get_questionnaire_json()
+    if putType == "question":
+        body = _get_question_json()
+    elif putType == "answer":
+        body = _get_answer_json()
+    validate(body, schema)
+    resp = client.put(href, json=body)
+    assert resp.status_code == 204
 
 class TestQuestionnaireCollection(object):
     """
@@ -190,7 +199,7 @@ class TestQuestionnaireCollection(object):
 
 class TestQuestionnaireItem(object):
     RESOURCE_URL = "/api/questionnaires/1/"
-    INVALID_URL = "/api/quesitonnaires/-1/"
+    INVALID_URL = "/api/quesitonnaires/0/"
 
     def test_get(self,client):
         """
@@ -258,7 +267,7 @@ class TestQuestionnaireItem(object):
 
 class TestQuestionsByQuestionnaire(object):
     RESOURCE_URL = "/api/questionnaires/1/questions/"
-    INVALID_URL = "/api/questionnaires/-1/questions/"
+    INVALID_URL = "/api/questionnaires/0/questions/"
 
     def test_get(self,client):
         """Tests for questions by questionnaire GET method."""
@@ -306,7 +315,7 @@ class TestQuestionsByQuestionnaire(object):
 
 class TestQuestionItem(object):
     RESOURCE_URL = "/api/questionnaires/1/questions/1/"
-    INVALID_URL = "/api/quesitonnaires/1/questions/-1/"
+    INVALID_URL = "/api/quesitonnaires/1/questions/0/"
 
     def test_get(self,client):
         """
@@ -372,7 +381,7 @@ class TestQuestionItem(object):
 
 class TestAnswersToQuestion(object):
     RESOURCE_URL = "/api/questionnaires/1/questions/1/answers/"
-    INVALID_URL = "/api/questionnaires/1/questions/-1/answers/"
+    INVALID_URL = "/api/questionnaires/1/questions/0/answers/"
 
     def test_get(self,client):
         """
@@ -424,7 +433,7 @@ class TestAnswersToQuestion(object):
 
 class TestAnswerItem(object):
     RESOURCE_URL = "/api/questionnaires/1/questions/1/answers/1/"
-    INVALID_URL = "/api/quesitonnaires/1/questions/1/answers/-1/"
+    INVALID_URL = "/api/quesitonnaires/1/questions/1/answers/0/"
 
     def test_get(self,client):
         """
@@ -462,7 +471,7 @@ class TestAnswerItem(object):
         resp = client.put(self.RESOURCE_URL, data=json.dumps(valid))
         assert resp.status_code == 415
 
-        # remove field for 400
+        # remove field for 405
         valid.pop("userName")
         resp = client.post(self.RESOURCE_URL, json=valid)
         assert resp.status_code == 405
