@@ -57,6 +57,11 @@ def test_questionnaire_filter1(db_handle):
 	assert query_questionnaire.count() == 1
 ```
 
+# API setup and testing
+If the FLASK has already been set up and the database has been configured properly, you can start to run the API by using the command `flask run`.
+
+The test for API functionalities are in `test_resource.py`. To run the test, you can just use command `pytest test_resource.py`.
+
 
 
 
