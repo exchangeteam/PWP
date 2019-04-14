@@ -98,6 +98,8 @@ class Answer(db.Model):
 # Build up the database.
 db.create_all()
 
+# IMPORTANT : THIS CODE IS TAKEN FROM ANOTHER RESOURCE
+# MasonBuilder was in exercise 3 in lovelace. We have taken the first three functions from there.
 class MasonBuilder(dict):
     """
     A convenience class for managing dictionaries that represent Mason
@@ -250,7 +252,9 @@ class MasonBuilder(dict):
         body.add_control("profile", href=ERROR_PROFILE)
 
         return Response(json.dumps(body), status_code, mimetype=MASON)
-        
+
+# IMPORTANT : THIS CODE IS TAKEN FROM ANOTHER RESOURCE
+# InverntoryBuilder structure was in exercise 3 in lovelace. We have observed the structure of it created our own.
 class InventoryBuilder(MasonBuilder):
     """
     A convenience class for managing controls that represent resource
