@@ -1,2 +1,2 @@
-web: gunicorn app:SurveyPWP/app
+web: gunicorn app:app
 
