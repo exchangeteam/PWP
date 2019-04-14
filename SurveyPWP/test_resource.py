@@ -33,15 +33,19 @@ def client():
 
 def _populate_db():
     """
-    Pre-populate database with 1 questionnaire, 3 questions on this questionnaire 
-    and 1 answer for each question.
+    Pre-populate database with 2 questionnaires.One of the questionnaire has 3 questions 
+    and 1 answer for each question. The other questionnaire has no question.
     """
     _questionnaire = Questionnaire(
         title="test-questionnaire-1",
         description="test-questionnaire"
     )
     db.session.add(_questionnaire)
-    for i in range(1, 3):
+    db.session.add(Questionnaire(
+        title="test-questionnaire-2",
+        description="test-questionnaire"
+    ))
+    for i in range(1, 4):
         q = Question(
             title = "test-question-{}".format(i),
             description = "test-question",
@@ -160,7 +164,7 @@ class TestQuestionnaireCollection(object):
         body = json.loads(resp.data)
         _check_namespace(client, body)
         _check_control_post_method("survey:add-questionnaire", client, body)
-        assert len(body["items"]) == 1
+        assert len(body["items"]) == 2
         for item in body["items"]:
             _check_control_get_method("self", client, item)
             _check_control_get_method("profile", client, item)
@@ -260,6 +264,7 @@ class TestQuestionnaireItem(object):
         assert resp.status_code == 204
         resp = client.get(self.RESOURCE_URL)
         assert resp.status_code == 404
+
         resp = client.delete(self.INVALID_URL)
         assert resp.status_code == 404
         
@@ -276,7 +281,7 @@ class TestQuestionsByQuestionnaire(object):
         body = json.loads(resp.data)
         _check_namespace(client, body)
         _check_control_post_method("survey:add-question", client, body)
-        assert len(body["items"]) == 2
+        assert len(body["items"]) == 3
         for item in body["items"]:
             print(item)
             _check_control_get_method("self", client, item)
@@ -315,7 +320,8 @@ class TestQuestionsByQuestionnaire(object):
 
 class TestQuestionItem(object):
     RESOURCE_URL = "/api/questionnaires/1/questions/1/"
-    INVALID_URL = "/api/quesitonnaires/1/questions/0/"
+    INVALID_URL = "/api/questionnaires/1/questions/0/"
+    MISMATCH_URL = "/api/questionnaires/2/questions/3/"
 
     def test_get(self,client):
         """
@@ -335,7 +341,9 @@ class TestQuestionItem(object):
         _check_control_put_method("edit", client, body,"question")
         _check_control_delete_method("survey:delete", client, body)
         resp = client.get(self.INVALID_URL)
-        assert resp.status_code == 404
+        assert resp.status_code == 405
+        resp = client.get(self.MISMATCH_URL)
+        assert resp.status_code == 408 
             
     def test_put(self,client):
         """Test for valid PUT method"""
@@ -347,16 +355,20 @@ class TestQuestionItem(object):
 
         # test with another url
         resp = client.put(self.INVALID_URL, json=valid)
-        assert resp.status_code == 404
+        assert resp.status_code == 405
 
         # test with wrong content type
         resp = client.put(self.RESOURCE_URL, data=json.dumps(valid))
         assert resp.status_code == 415
 
-        # remove field title for 405
+        # test mismatch question id to questionnaire 408
+        resp = client.put(self.MISMATCH_URL, data=json.dumps(valid))
+        assert resp.status_code == 408
+
+        # remove field title for 400
         valid.pop("title")
-        resp = client.post(self.RESOURCE_URL, json=valid)
-        assert resp.status_code == 405
+        resp = client.put(self.RESOURCE_URL, json=valid)
+        assert resp.status_code == 400
 
         valid = _get_question_json()
         resp = client.put(self.RESOURCE_URL, json=valid)
@@ -368,20 +380,24 @@ class TestQuestionItem(object):
     def test_delete(self, client):
         """
         Tests the DELETE method. Checks that a valid request reveives 204
-        response and that trying to GET the question afterwards results in 404.
-        Also checks that trying to delete a question that doesn't exist results
-        in 404.
+        response and that trying to GET the question afterwards results in 405.
+        Also checks that trying to delete a question that doesn't exist and mismatched results
+        in 405 and 408.
         """
         resp = client.delete(self.RESOURCE_URL)
         assert resp.status_code == 204
         resp = client.get(self.RESOURCE_URL)
         assert resp.status_code == 405
+
         resp = client.delete(self.INVALID_URL)
-        assert resp.status_code == 404
+        assert resp.status_code == 405
+        resp = client.delete(self.MISMATCH_URL)
+        assert resp.status_code == 408
 
 class TestAnswersToQuestion(object):
     RESOURCE_URL = "/api/questionnaires/1/questions/1/answers/"
     INVALID_URL = "/api/questionnaires/1/questions/0/answers/"
+    MISMATCH_URL = "/api/questionnaires/2/questions/3/answers/"
 
     def test_get(self,client):
         """
@@ -401,6 +417,8 @@ class TestAnswersToQuestion(object):
             _check_control_get_method("profile", client, item)
             assert "content" in item
             assert "userName" in item
+        resp = client.get(self.MISMATCH_URL)
+        assert resp.status_code == 408
 
     def test_post(self, client): 
         valid = _get_answer_json()
@@ -425,6 +443,10 @@ class TestAnswersToQuestion(object):
         resp = client.post(self.INVALID_URL, json=valid)
         assert resp.status_code == 405
 
+        # test with mismatch question to questionnaire, 408
+        resp = client.get(self.MISMATCH_URL)
+        assert resp.status_code == 408 
+
         # remove field title for 400
         valid = _get_answer_json()
         valid.pop("userName")
@@ -434,6 +456,8 @@ class TestAnswersToQuestion(object):
 class TestAnswerItem(object):
     RESOURCE_URL = "/api/questionnaires/1/questions/1/answers/1/"
     INVALID_URL = "/api/quesitonnaires/1/questions/1/answers/0/"
+    MISMATCH_URL1 = "/api/questionnaires/2/questions/3/answers/2/"
+    MISMATCH_URL2 = "/api/questionnaires/1/questions/1/answers/2/"
 
     def test_get(self,client):
         """
@@ -454,6 +478,10 @@ class TestAnswerItem(object):
         _check_control_delete_method("survey:delete", client, body)
         resp = client.get(self.INVALID_URL)
         assert resp.status_code == 404
+        resp = client.get(self.MISMATCH_URL1)
+        assert resp.status_code == 408
+        resp = client.get(self.MISMATCH_URL2)
+        assert resp.status_code == 409
             
     def test_put(self,client):
         """Test for valid PUT method"""
@@ -466,6 +494,13 @@ class TestAnswerItem(object):
         # test with another url
         resp = client.put(self.INVALID_URL, json=valid)
         assert resp.status_code == 404
+
+        # test with mismatch question to questionnaire, 408
+        resp = client.get(self.MISMATCH_URL1, data=valid)
+        assert resp.status_code == 408
+        # test with mismatch answer to question, 409
+        resp = client.get(self.MISMATCH_URL2, data=valid)
+        assert resp.status_code == 409
 
         # test with wrong content type
         resp = client.put(self.RESOURCE_URL, data=json.dumps(valid))
@@ -492,7 +527,7 @@ class TestAnswerItem(object):
         Tests the DELETE method. Checks that a valid request reveives 204
         response and that trying to GET the question afterwards results in 404.
         Also checks that trying to delete a question that doesn't exist results
-        in 404.
+        in 404. Mismatch questions and answers result in 408 and 409.
         """
         resp = client.delete(self.RESOURCE_URL)
         assert resp.status_code == 204
@@ -500,3 +535,8 @@ class TestAnswerItem(object):
         assert resp.status_code == 406
         resp = client.delete(self.INVALID_URL)
         assert resp.status_code == 404
+
+        resp = client.delete(self.MISMATCH_URL1)
+        assert resp.status_code == 408
+        resp = client.delete(self.MISMATCH_URL2)
+        assert resp.status_code == 409
