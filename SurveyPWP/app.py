@@ -10,13 +10,16 @@ from flask_restful import Api
 from jsonschema import validate, ValidationError
 from sqlite3 import Connection as SQLite3Connection
 
-# Configuring and setting up the database for usage. 
+# Configuring the application.
 app = Flask("SurveyPWP")
 api = Api(app)
+
+# Setting up the database.
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
+# Defining the profiles that are used in our API.
 QUESTIONNAIRE_PROFILE = "/profiles/questionnaire/"
 QUESTION_PROFILE = "/profiles/question/"
 ANSWER_PROFILE = "/profiles/answer/"
@@ -159,40 +162,64 @@ class MasonBuilder(dict):
         self["@controls"][ctrl_name]["href"] = href
     
     def questionnaire_schema(self):
+    	"""
+		This is the schema we used in our API for a questionnaire. A questionnaire is an object
+		which only enforces to have title. The description of the questionnaire can be nullified.
+
+		Both title and descriptions are types of strings.
+    	"""
         schema = {
             "type": "object",
             "required": ["title"],
             "nullable": ["description"]
         }
+
         props = schema["properties"] = {}
         props["title"] = {
             "description": "Questionnaire's title",
             "type": "string"
         }
+
         props["description"] = {
             "description": "Questionnaire's description",
             "type": "string"
         }
+
         return schema
 
     def question_schema(self):
+    	"""
+		This is the schema we used in our API for a question. A question is an object
+		which only enforces to have title. The description of the question can be nullified.
+
+		Both title and descriptions are types of strings.
+    	"""   	
         schema = {
             "type": "object",
             "required": ["title"],
             "nullable": ["description"]
         }
+
         props = schema["properties"] = {}
         props["title"] = {
             "description": "Question's title",
             "type": "string"
         }
+
         props["description"] = {
             "description": "Question's description",
             "type": "string"
         }
+
         return schema
         
     def answer_schema(self):
+    	"""
+		This is the schema we used in our API for an answer. An answer is an object
+		which enforces to have both content and username. There are no nullable parts.
+
+		Both content and username are types of strings.
+    	"""    	
         schema = {
             "type": "object",
             "required": ["content","userName"]
@@ -209,28 +236,57 @@ class MasonBuilder(dict):
         return schema
         
     def create_error_response(status_code, title, message=None):
+    	"""
+    	This is the part where the error message starts to be created.
+    	
+    	We first take the url of the resource which the error has occured and
+    	afterwards, we add a title and a message to make it descriptive for the developer.
+    	And we add an error profile to make it more recognizable.
+    	"""
         resource_url = request.path
         body = MasonBuilder(resource_url=resource_url)
         body.add_error(title, message)
         body.add_control("profile", href=ERROR_PROFILE)
+
         return Response(json.dumps(body), status_code, mimetype=MASON)
         
 class InventoryBuilder(MasonBuilder):
+    """
+    A convenience class for managing controls that represent resource
+    objects. It provides nice shorthands for inserting, editing and removing
+    some of the more elements into the application.
+    """	
 	def add_control_all_questionnaires(self):
+		"""
+		This control is to retrieve all existing questionnaires from
+		the application. It works with the GET method.
+		"""
 		self.add_control(
 		    "survey:questionnaire-all",
 		    "api/questionnaires/",
 		    method="GET",
 		    title="Get all questionnaires"
 		)
+
 	def add_control_delete_questionnaire(self, id):
+		"""
+		This control is to delete an existing questionnaire from
+		the application. It works with the DELETE method and requires
+		a questionnaire id in the request body.
+		"""
 		self.add_control(
 		    "survey:delete",
 		    href=api.url_for(QuestionnaireItem, id = id),
 		    method="DELETE",
 		    title="Delete this questionnaire"
 		)
+
 	def add_control_add_questionnaire(self):
+		"""
+		This control is to add a new questionnaire into the application.
+		It works with the POST method and the schema can be found by a 
+		request to the resource.
+		"""
 		self.add_control(
 		    "survey:add-questionnaire",
 		    "api/questionnaires/",
@@ -239,7 +295,13 @@ class InventoryBuilder(MasonBuilder):
 		    title="Add a new questionnaire",
 		    schema=self.questionnaire_schema()
 		)
+
 	def add_control_edit_questionnaire(self, id):
+		"""
+		This control is to edit an existing questionnaire in the application.
+		It works with the PUT method and requires a questionnaire id in the
+		request body.
+		"""		
 		self.add_control(
 		    "edit",
 		    href=api.url_for(QuestionnaireItem, id = id),
@@ -250,13 +312,24 @@ class InventoryBuilder(MasonBuilder):
 		)
 		
 	def add_control_all_question(self, questionnaire_id):
+		"""
+		This control is to retrieve all existing questions for a specified 
+		questionnaire. It works with the GET method and it requies a questionnaire
+		id in the request body.
+		"""
 		self.add_control(
 		    "survey:question-of",
 		    href="/api/questionnaires/{}/questions/".format(questionnaire_id),
 		    method="GET",
 		    title="Get all questions of one questionnaire"
 		)
+
 	def add_control_add_question(self, questionnaire_id):
+		"""
+		This control is to add a question for a specified questionnaire. It works
+		with the POST method and the schema can be found by making a request to 
+		the resource. It requires a questionnaire id in the request body.
+		"""
 		self.add_control(
 		    "survey:add-question",
 		    href="/api/questionnaires/{}/questions/".format(questionnaire_id),
@@ -265,7 +338,13 @@ class InventoryBuilder(MasonBuilder):
 		    title="Add a new question",
 		    schema=self.question_schema()
 		)
+
 	def add_control_edit_question(self, questionnaire_id, id):
+		"""
+		This control is to edit an existing question for a specified questionnaire.
+		It works with the PUT method and it requires a questionnaire id in the request
+		body.
+		"""
 		self.add_control(
 		    "edit",
 		    "/api/questionnaires/{}/questions/{}/".format(questionnaire_id, id),
@@ -274,22 +353,38 @@ class InventoryBuilder(MasonBuilder):
 		    title="Edit this question",
 		    schema=self.question_schema()
 		)
+
 	def add_control_delete_question(self, questionnaire_id, id):
+		"""
+		This control is to delete an existing question in a specified questionnaire.
+		It works with the DELETE method and it requires a questionnaire id in the 
+		request body.
+		"""
 		self.add_control(
 		    "survey:delete",
 		    "/api/questionnaires/{}/questions/{}/".format(questionnaire_id, id),
 		    method="DELETE",
 		    title="Delete this question"
 		)
-	
+
 	def add_control_all_answer(self, questionnaire_id, question_id):
+		"""
+		This control is to retrieve all answers for a specified questionnaire and question.
+		It works with the GET method and it requires both the questionnaire id and question id.
+		"""
 		self.add_control(
 		    "survey:answer-to",
 		    "/api/questionnaires/{}/questions/{}/answers/".format(questionnaire_id, question_id),
 		    method="GET",
 		    title="Get all answers to one question in one questionnaire"
 		)
+
 	def add_control_add_answer(self, questionnaire_id, question_id):
+		"""
+		This control is to add an answer to an existing question in a specific questionnaire.
+		It works with the POST method and the schema can be found by making a request to the
+		resource. It requires both a questionnaire id and question id.
+		"""
 		self.add_control(
 		    "survey:add-answer",
 		    "/api/questionnaires/{}/questions/{}/answers/".format(questionnaire_id, question_id),
@@ -298,7 +393,13 @@ class InventoryBuilder(MasonBuilder):
 		    title="Add a new answer",
 		    schema=self.answer_schema()
 		)
+
 	def add_control_edit_answer(self, questionnaire_id, question_id, id):
+		"""
+		This control is to edit an existing answer to an existing question for a specific questionnaire.
+		It works with the PUT method and it requires questionnaire id, question id and the answer id to
+		be edited.
+		"""
 		self.add_control(
 		    "edit",
 		    "/api/questionnaires/{}/questions/{}/answers/{}/".format(questionnaire_id, question_id, id),
@@ -307,7 +408,13 @@ class InventoryBuilder(MasonBuilder):
 		    title="Edit this answer",
 		    schema=self.answer_schema()
 		)
+
 	def add_control_delete_answer(self, questionnaire_id, question_id, id):
+		"""
+		This control is to delete an answer to an existing question for a specific questionnaire.
+		It works with the DELETe method and it requires questionnaire id, question id and the answer id
+		to be deleted.
+		"""
 		self.add_control(
 		    "survey:delete",
 		    "/api/questionnaires/{}/questions/{}/answers/{}/".format(questionnaire_id, question_id, id),
@@ -315,15 +422,18 @@ class InventoryBuilder(MasonBuilder):
 		    title="Delete this answer"
 		)
 
-	
-
 class EntryPoint(Resource):
+	"""
+	This class represents the root point <EntryPoint> of our API.
+	"""
 	def get(self):
 		body = InventoryBuilder()
 		body.add_namespace("survey", LINK_RELATIONS_URL)
 		body.add_control_all_questionnaires()
+
 		return Response(json.dumps(body), 200, mimetype=MASON)
 
+# Adding the entry point into the resources of our API.
 api.add_resource(EntryPoint, "/api/")
 
 class QuestionnaireCollection(Resource):
