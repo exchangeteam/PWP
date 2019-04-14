@@ -31,9 +31,9 @@ MASON = "application/vnd.mason+json"
 # Code taken from Kiran Jonnalagadda, https://stackoverflow.com/questions/2614984/sqlite-sqlalchemy-how-to-enforce-foreign-keys
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
-    cursor = dbapi_connection.cursor()
-    cursor.execute("PRAGMA foreign_keys=ON")
-    cursor.close()
+	cursor = dbapi_connection.cursor()
+	cursor.execute("PRAGMA foreign_keys=ON")
+	cursor.close()
 
 class Questionnaire(db.Model):
     """
@@ -674,11 +674,11 @@ class QuestionCollection(Resource):
                 title = request.json["title"]
             )
 
-            db.session.add(question)
-            db.session.commit()
-            question_id = question.id
-        
-        return Response(status = 201, headers={"Location":"/api/questionnaires/{}/questions/{}/".format(questionnaire_id, question_id)})
+			db.session.add(question)
+			db.session.commit()
+			question_id = question.id
+		
+		return Response(status = 201, headers={"Location":"/api/questionnaires/{}/questions/{}/".format(questionnaire_id, question_id)})
 
 # Adding the QuestionCollection resource into our API.
 api.add_resource(QuestionCollection, "/api/questionnaires/<questionnaire_id>/questions/")
@@ -696,12 +696,12 @@ class QuestionItem(Resource):
         # Filters the database for a specific questionnaire.
         db_questionnaire = Questionnaire.query.filter_by(id = questionnaire_id).first()
 
-        # If no result is found, return an error.
-        if db_questionnaire is None:
-            return MasonBuilder.create_error_response(404, "Not found", "No questionnaire was found with the id {}".format(questionnaire_id))
+		# If no result is found, return an error.
+		if db_questionnaire is None:
+			return MasonBuilder.create_error_response(404, "Not found", "No questionnaire was found with the id {}".format(questionnaire_id))
 
-        # Filters the database for a specific question.
-        db_question = Question.query.filter_by(id = id).first()
+		# Filters the database for a specific question.
+		db_question = Question.query.filter_by(id = id).first()
 
         # If no result is found, return an error.
         if db_question is None:
@@ -791,12 +791,12 @@ class QuestionItem(Resource):
         # Filters the database for a specific questionnaire.
         db_questionnaire = Questionnaire.query.filter_by(id = questionnaire_id).first()
 
-        # If no result is found, return an error.
-        if db_questionnaire is None:
-            return MasonBuilder.create_error_response(404, "Not found", "No questionnaire was found with the id {}".format(questionnaire_id))
+		# If no result is found, return an error.
+		if db_questionnaire is None:
+			return MasonBuilder.create_error_response(404, "Not found", "No questionnaire was found with the id {}".format(questionnaire_id))
 
-        # Filters the database for a specific question.
-        db_question = Question.query.filter_by(id = id).first()
+		# Filters the database for a specific question.
+		db_question = Question.query.filter_by(id = id).first()
 
         # If no result is found, return an error.
         if db_question is None:
@@ -834,12 +834,12 @@ class AnswerCollection(Resource):
         # Filters the database for a specific questionnaire.
         db_questionnaire = Questionnaire.query.filter_by(id = questionnaire_id).first()
 
-        # If no result is found, return an error.
-        if db_questionnaire is None:
-            return MasonBuilder.create_error_response(404, "Not found", "No questionnaire was found with the id {}".format(questionnaire_id))
+		# If no result is found, return an error.
+		if db_questionnaire is None:
+			return MasonBuilder.create_error_response(404, "Not found", "No questionnaire was found with the id {}".format(questionnaire_id))
 
-        # Filters the database for a specific question.
-        db_question = Question.query.filter_by(id = question_id).first()
+		# Filters the database for a specific question.
+		db_question = Question.query.filter_by(id = question_id).first()
 
         # If no result is found, return an error.
         if db_question is None:
@@ -945,12 +945,12 @@ class AnswerItem(Resource):
         # Filters the database for a specific questionnaire.
         db_questionnaire = Questionnaire.query.filter_by(id = questionnaire_id).first()
 
-        # If no result is found, return an error.
-        if db_questionnaire is None:
-            return MasonBuilder.create_error_response(404, "Not found", "No questionnaire was found with the id {}".format(questionnaire_id))
+		# If no result is found, return an error.
+		if db_questionnaire is None:
+			return MasonBuilder.create_error_response(404, "Not found", "No questionnaire was found with the id {}".format(questionnaire_id))
 
-        # Filters the database for a specific question.
-        db_question = Question.query.filter_by(id = question_id).first()
+		# Filters the database for a specific question.
+		db_question = Question.query.filter_by(id = question_id).first()
 
         # If no result is found, return an error.
         if db_question is None:
@@ -1007,12 +1007,12 @@ class AnswerItem(Resource):
         # Filters the database for a specific questionnaire.
         db_questionnaire = Questionnaire.query.filter_by(id = questionnaire_id).first()
 
-        # If no result is found, return an error.
-        if db_questionnaire is None:
-            return MasonBuilder.create_error_response(404, "Not found", "No questionnaire was found with the id {}".format(questionnaire_id))
+		# If no result is found, return an error.
+		if db_questionnaire is None:
+			return MasonBuilder.create_error_response(404, "Not found", "No questionnaire was found with the id {}".format(questionnaire_id))
 
-        # Filters the database for a specific question.
-        db_question = Question.query.filter_by(id = question_id).first()
+		# Filters the database for a specific question.
+		db_question = Question.query.filter_by(id = question_id).first()
 
         # If no result is found, return an error.
         if db_question is None:
