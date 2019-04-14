@@ -841,23 +841,3 @@ def profilesforerror():
 @app.route("/survey/link-relations/")
 def relations():
 	return "", 200
-
-# @app.route("/profiles/questionnaire/")
-# def profilesQn():
-# 	return "", 200
-
-# @app.route("/profiles/question/")
-# def profiles():
-# 	return "", 200
-	
-# @app.route("/profiles/answer/")
-# # def profiles():
-# # 	return "", 200
-
-# @app.route("/profiles/error/")
-# def profiles():
-# 	return "", 200
-
-# @app.route("/survey/link-relations/")
-# def relations():
-# 	return "", 200
