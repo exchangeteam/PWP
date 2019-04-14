@@ -35,38 +35,38 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
 
-"""
-Table : Questionnaire
-----------------------
-Description : This table stores all the questionnaires.
-
-- 'id', INTEGER, PRIMARY KEY, Contains id of each questionnaire.
-- 'title', STRING, MAX 64 Characters, NOT NULL, Contains the title of each questionnaire.
-- 'description', STRING, MAX 512 Characters, NULLABLE, Contains the description of each questionnaire.
-
-* 'question', RELATIONSHIP with the Question table.
-"""
 class Questionnaire(db.Model):
+	"""
+	Table : Questionnaire
+	----------------------
+	Description : This table stores all the questionnaires.
+
+	- 'id', INTEGER, PRIMARY KEY, Contains id of each questionnaire.
+	- 'title', STRING, MAX 64 Characters, NOT NULL, Contains the title of each questionnaire.
+	- 'description', STRING, MAX 512 Characters, NULLABLE, Contains the description of each questionnaire.
+
+	* 'question', RELATIONSHIP with the Question table.
+	"""
 	id = db.Column(db.Integer, primary_key = True)
 	title = db.Column(db.String(64), nullable = False)
 	description = db.Column(db.String(512), nullable = True)
 
 	question = db.relationship("Question", back_populates = "questionnaire", cascade = "save-update, delete")
 
-"""
-Table : Question
-----------------------
-Description : This table stores all the questions, and each question belongs to a specific questionnaire.
-
-- 'id', INTEGER, PRIMARY KEY, Contains id of each question.
-- 'questionnaire_id', INTEGER, FOREIGN KEY, NOT NULL, Contains id of the questionnaire.
-- 'title', STRING, MAX 64 Characters, NOT NULL, Contains the title of each question.
-- 'description', STRING, MAX 512 Characters, NULLABLE, Contains the description of each question.
-
-* 'questionnaire', RELATIONSHIP with the Questionnaire table.
-* 'answer', RELATIONSHIP with the Answer table.
-"""
 class Question(db.Model):
+	"""
+	Table : Question
+	----------------------
+	Description : This table stores all the questions, and each question belongs to a specific questionnaire.
+
+	- 'id', INTEGER, PRIMARY KEY, Contains id of each question.
+	- 'questionnaire_id', INTEGER, FOREIGN KEY, NOT NULL, Contains id of the questionnaire.
+	- 'title', STRING, MAX 64 Characters, NOT NULL, Contains the title of each question.
+	- 'description', STRING, MAX 512 Characters, NULLABLE, Contains the description of each question.
+
+	* 'questionnaire', RELATIONSHIP with the Questionnaire table.
+	* 'answer', RELATIONSHIP with the Answer table.
+	"""
 	id = db.Column(db.Integer, primary_key = True)
 	questionnaire_id = db.Column(db.Integer, db.ForeignKey("questionnaire.id"), nullable = False)
 	title = db.Column(db.String(64), nullable = False)
@@ -75,19 +75,19 @@ class Question(db.Model):
 	questionnaire = db.relationship("Questionnaire", back_populates = "question")
 	answer = db.relationship("Answer", back_populates = "question", cascade = "save-update, delete")
 
-"""
-Table : Answer
-----------------------
-Description : This table stores all the answers, and each answer belongs to a specific question.
-
-- 'id', INTEGER, PRIMARY KEY, Contains id of each answer.
-- 'question_id', INTEGER, FOREIGN KEY, NULLABLE, Contains id of the question.
-- 'content', STRING, MAX 512 Characters, NOT NULL, Contains the answer as a string.
-- 'userName', STRING, MAX 64 Characters, NOT NULL, Contains the username of the user.
-
-* 'question', RELATIONSHIP with the Question table.
-"""
 class Answer(db.Model):
+	"""
+	Table : Answer
+	----------------------
+	Description : This table stores all the answers, and each answer belongs to a specific question.
+
+	- 'id', INTEGER, PRIMARY KEY, Contains id of each answer.
+	- 'question_id', INTEGER, FOREIGN KEY, NULLABLE, Contains id of the question.
+	- 'content', STRING, MAX 512 Characters, NOT NULL, Contains the answer as a string.
+	- 'userName', STRING, MAX 64 Characters, NOT NULL, Contains the username of the user.
+
+	* 'question', RELATIONSHIP with the Question table.
+	"""
 	id = db.Column(db.Integer, primary_key = True)
 	question_id = db.Column(db.Integer, db.ForeignKey("question.id"), nullable = False)
 	content = db.Column(db.String(512), nullable = False)
@@ -95,6 +95,7 @@ class Answer(db.Model):
 
 	question = db.relationship("Question", back_populates = "answer")
 
+# Build up the database.
 db.create_all()
 
 class MasonBuilder(dict):
@@ -437,9 +438,17 @@ class EntryPoint(Resource):
 api.add_resource(EntryPoint, "/api/")
 
 class QuestionnaireCollection(Resource):
+	"""
+	This class represents a resource called QuestionnaireCollection.
+	On this resource, there are two functions a client can use: GET and POST
+	"""
     def get(self):
+    	"""
+    	This method is used to retrieve all the questionnaires. It returns a list of questionnaires.
+		"""
         db_questionnaire= Questionnaire.query.all()
         items=[]
+
         for item in db_questionnaire:
             questionnaire = InventoryBuilder(
                 id = item.id,
@@ -453,14 +462,19 @@ class QuestionnaireCollection(Resource):
         body = InventoryBuilder(
             items = items
         )
+
         body.add_namespace("survey", LINK_RELATIONS_URL)
         body.add_control("self", "/api/questionnaires/")
-        #body.add_control("answer-to-questionnaire", "/api/questionnaire/{}/")
         body.add_control_add_questionnaire()
             
         return Response(json.dumps(body), 200, mimetype=MASON)
 		
     def post(self):
+    	"""
+    	This method is used to create a new questionnaire in the application.
+    	"""
+
+    	# First the error checking is done. If any error, stop registering new questionnaire and return error.
         if not request.json:
             return MasonBuilder.create_error_response(415, "Unsupported media type", "Request must be JSON")
 				
@@ -469,7 +483,9 @@ class QuestionnaireCollection(Resource):
         except ValidationError as e:
             return MasonBuilder.create_error_response(400, "Invalid JSON document", str(e))
 		
+		# If no error, then start executing the request.
         questionnaire_id = ''
+
         try:
             questionnaire = Questionnaire(
                 title = request.json["title"],
@@ -488,18 +504,33 @@ class QuestionnaireCollection(Resource):
             
         return Response(status=201, headers={"Location":"/api/questionnaires/{}/".format(questionanire_id)})
 
+# Adding the QuestionnaireCollection resource into our API.
 api.add_resource(QuestionnaireCollection, "/api/questionnaires/")
 
 class QuestionnaireItem(Resource):
+	"""
+	This class represents a resource called QuestionnaireItem.
+	On this resource, there are three functions a client can use: GET, PUT and DELETE
+	"""
 	def get(self, id):
+		"""
+		This method is used to retrieve a specific questionnaire. It returns the specified questionnaire.
+		"""
+
+		# Filters the database with the one searched for.
 		db_questionnaire = Questionnaire.query.filter_by(id = id).first()
+
+		# If no result is found, return an error.
 		if db_questionnaire is None:
 			return MasonBuilder.create_error_response(404, "Not found", "No questionnaire was found with the id {}".format(id))
+
+		# Otherwise, continue building the response.
 		body = InventoryBuilder(
 		    id = db_questionnaire.id,
 		    title = db_questionnaire.title,
 		    description = db_questionnaire.description
 		)
+
 		body.add_namespace("survey", LINK_RELATIONS_URL)
 		body.add_control("self", api.url_for(QuestionnaireItem, id = id))
 		body.add_control("profile", QUESTIONNAIRE_PROFILE)
@@ -511,17 +542,25 @@ class QuestionnaireItem(Resource):
 		return Response(json.dumps(body), 200, mimetype = MASON)
 	
 	def put(self, id):
+		"""
+		This method is used to edit a specific questionnaire.
+		"""
+
+		# Filters the database with the one searched for.
 		questionnaire = Questionnaire.query.filter_by(id = id).first()
+
+		# If no result is found, return an error.
 		if questionnaire is None:
 			return MasonBuilder.create_error_response(404, "Not found", "No Questionnaire was found with the id {}".format(id))
-			
 		if not request.json:
 			return MasonBuilder.create_error_response(415, "Unsupported media type", "Request must be JSON")
+
 		try:
 			validate(request.json, MasonBuilder.questionnaire_schema(self))
 		except ValidationError as e:
 			return MasonBuilder.create_error_response(400, "Invalid JSON document", str(e))
 		    
+		# Otherwise, continue building the response.
 		try:
 		    questionnaire.title = request.json["title"]
 		    questionnaire.description = request.json["description"]
@@ -533,25 +572,47 @@ class QuestionnaireItem(Resource):
 		return Response(status = 204, headers={"Location":api.url_for(QuestionnaireItem, id = id)})
 		
 	def delete(self, id):
+		"""
+		This method is used to delete a specific questionnaire.
+		"""
+
+		# Filters the database with the one searched for.
 		questionnaire = Questionnaire.query.filter_by(id = id).first()
+
+		# If no result is found, return an error.
 		if questionnaire is None:
 			return MasonBuilder.create_error_response(404, "Not found", "No Questionnaire was found with the id {}".format(id))
 		
+		# Otherwise, continue building the response.
 		db.session.delete(questionnaire)
 		db.session.commit()
 			
 		return Response(status = 204, headers={"Location":api.url_for(QuestionnaireItem, id = id)})
 		
+# Adding the QuestionnaireItem resource into our API.
 api.add_resource(QuestionnaireItem, "/api/questionnaires/<id>/")	
 
 class QuestionCollection(Resource):
+	"""
+	This class represents a resource called QuestionCollection.
+	On this resource, there are two functions a client can use: GET and POST.
+	"""
     def get(self, questionnaire_id):
+    	"""
+    	This method is used to retrieve all questions for a specified questionnaire. It returns a list of questions.
+    	"""
+
+    	# Filters the database with the one questionnaire searched for.
         questionnaire = Questionnaire.query.filter_by(id = questionnaire_id).first()
+
+        # If no result is found, return an error.
         if questionnaire is None:
             return MasonBuilder.create_error_response(404, "Not found", "No Questionnaire was found with id {}".format(questionnaire_id))
 		
+		# Otherwise, continue building the response.
         db_question= Question.query.filter_by(questionnaire_id = questionnaire_id).all()
         items=[]
+
         for item in db_question:
             question = InventoryBuilder(
                 id = item.id,
@@ -559,6 +620,7 @@ class QuestionCollection(Resource):
 			    title = item.title,
 			    description = item.description
 			)
+
             question.add_control("self", "/api/questionnaires/{}/questions/{}/".format(item.questionnaire_id, item.id))
             question.add_control("profile", QUESTION_PROFILE)
             items.append(question)
@@ -574,19 +636,28 @@ class QuestionCollection(Resource):
         return Response(json.dumps(body), 200, mimetype=MASON)
         
     def post(self, questionnaire_id):
+    	"""
+    	This method is used to add a new question for a specified questionnaire.
+    	"""
+
+    	# Request validity checking..
         if not request.json:
             return MasonBuilder.create_error_response(415, "Unsupported media type", "Request must be JSON")
-				
         try:
             validate(request.json, MasonBuilder.question_schema(self))
         except ValidationError as e:
             return MasonBuilder.create_error_response(400, "Invalid JSON document", str(e))
 		
+		# Filters the database with the one questionnaire searched for.
         questionnaire = Questionnaire.query.filter_by(id = questionnaire_id).first()
+
+        # If no result is found, return an error.
         if questionnaire is None:
             return MasonBuilder.create_error_response(404, "Not found", "No Questionnaire with the id {}".format(questionnaire_id))
 		
+		# Otherwise, continue building the response.
         question_id = ''
+
         try:
             question = Question(
                 questionnaire_id = questionnaire_id,
@@ -602,36 +673,58 @@ class QuestionCollection(Resource):
 			    questionnaire_id = questionnaire_id,
                 title = request.json["title"]
 			)
+
             db.session.add(question)
             db.session.commit()
             question_id = question.id
         
         return Response(status = 201, headers={"Location":"/api/questionnaires/{}/questions/{}/".format(questionnaire_id, question_id)})
 
+# Adding the QuestionCollection resource into our API.
 api.add_resource(QuestionCollection, "/api/questionnaires/<questionnaire_id>/questions/")
 
 class QuestionItem(Resource):
+	"""
+	This class represents a resource called QuestionItem.
+	On this resource, there are three functions a client can use: GET, PUT and DELETE.
+	"""
     def get(self,questionnaire_id,id):
+    	"""
+    	This method is to retrieve a specific question for a specific questionnaire.
+		"""
+
+		# Filters the database for a specific questionnaire.
         db_questionnaire = Questionnaire.query.filter_by(id = questionnaire_id).first()
+
+        # If no result is found, return an error.
         if db_questionnaire is None:
             return MasonBuilder.create_error_response(404, "Not found", "No questionnaire was found with the id {}".format(questionnaire_id))
+
+        # Filters the database for a specific question.
         db_question = Question.query.filter_by(id = id).first()
+
+       	# If no result is found, return an error.
         if db_question is None:
             return MasonBuilder.create_error_response(405, "Not found", "No question was found with the id {}".format(id))
 		
+		# Otherwise, continue building the response.
         questions = Question.query.filter_by(questionnaire_id = questionnaire_id).all()
         idOfQuestions = []
+
+        # Checking if the found question belongs to the specified questionnaire, this is a crucial point...
         for q in questions:
             idOfQuestions.append(q.id)
         if int(id) not in idOfQuestions:
             return MasonBuilder.create_error_response(408, "Do not match", "The question with id {} does not belong to questionnaire {}".format(id, questionnaire_id))
 		
+		# Creating the rest of the response.
         body = InventoryBuilder(
             id = db_question.id,
             questionnaire_id = db_question.questionnaire_id,
             title = db_question.title,
             description = db_question.description
         )
+
         body.add_namespace("survey", LINK_RELATIONS_URL)
         body.add_control("self","/api/questionnaires/{}/questions/{}/".format(questionnaire_id, id))
         body.add_control("profile", QUESTION_PROFILE)
@@ -643,27 +736,43 @@ class QuestionItem(Resource):
         return Response(json.dumps(body), 200, mimetype = MASON)
         
     def put(self,questionnaire_id,id):
+    	""" 
+    	This method is used to edit an existing question in a specified questionnaire.
+    	"""
+
+    	# Filters the database for a specific questionnaire.
         db_questionnaire = Questionnaire.query.filter_by(id = questionnaire_id).first()
+
+        # If no result is found, return an error.
         if db_questionnaire is None:
             return MasonBuilder.create_error_response(404, "Not found", "No questionnaire was found with the id {}".format(questionnaire_id))
+
+        # Filters the database for a specific question.
         db_question = Question.query.filter_by(id = id).first()
+
+        # If no result is found, return an error.
         if db_question is None:
             return MasonBuilder.create_error_response(405, "Not found", "No question was found with the id {}".format(id))
 		
+		# Otherwise, continue building the response.
         questions = Question.query.filter_by(questionnaire_id = questionnaire_id).all()
         idOfQuestions = []
+
+        # Checking if the found question belongs to the specified questionnaire, this is a crucial point...
         for q in questions:
             idOfQuestions.append(q.id)
         if int(id) not in idOfQuestions:
             return MasonBuilder.create_error_response(408, "Do not match", "The question with id {} does not belong to questionnaire {}".format(id, questionnaire_id))
-			
+		
+		# Validity check of the request..
         if not request.json:
             return MasonBuilder.create_error_response(415, "Unsupported media type", "Request must be JSON")
         try:
             validate(request.json, MasonBuilder.question_schema(self))
         except ValidationError as e:
             return MasonBuilder.create_error_response(400, "Invalid JSON document", str(e))
-            
+        
+        # Keep building the response.
         try:
             db_question.title = request.json["title"]
             db_question.description = request.json["description"]
@@ -675,43 +784,78 @@ class QuestionItem(Resource):
         return Response(status = 204, headers={"Location":"/api/questionnaires/{}/questions/{}/".format(questionnaire_id, id)})
 		
     def delete(self,questionnaire_id,id):
+    	"""
+    	This method is used to delete an existing question in a specific questionnaire.
+    	"""
+
+    	# Filters the database for a specific questionnaire.
         db_questionnaire = Questionnaire.query.filter_by(id = questionnaire_id).first()
+
+        # If no result is found, return an error.
         if db_questionnaire is None:
             return MasonBuilder.create_error_response(404, "Not found", "No questionnaire was found with the id {}".format(questionnaire_id))
+
+        # Filters the database for a specific question.
         db_question = Question.query.filter_by(id = id).first()
+
+        # If no result is found, return an error.
         if db_question is None:
             return MasonBuilder.create_error_response(405, "Not found", "No question was found with the id {}".format(id))
 		
+		# Otherwise, continue building the response.
         questions = Question.query.filter_by(questionnaire_id = questionnaire_id).all()
         idOfQuestions = []
+
+        # Checking if the found question belongs to the specified questionnaire, this is a crucial point...
         for q in questions:
             idOfQuestions.append(q.id)
         if int(id) not in idOfQuestions:
             return MasonBuilder.create_error_response(408, "Do not match", "The question with id {} does not belong to questionnaire {}".format(id, questionnaire_id))
-			
+		
+		# Building the response.
         db.session.delete(db_question)
         db.session.commit()
 			
         return Response(status = 204, headers={"Location":"/api/questionnaires/{}/questions/{}/".format(questionnaire_id, id)})
-		
+
+# Adding the QuestionItem resource into our API.		
 api.add_resource(QuestionItem, "/api/questionnaires/<questionnaire_id>/questions/<id>/")
 
 class AnswerCollection(Resource):
+	"""
+	This class represents a resource called AnswerCollection.
+	On this resource, there are two functions a client can use: GET and POST.
+	"""
     def get(self, questionnaire_id, question_id):
+    	"""
+    	This method is used to retrieve answers given to a question in a specific questionnaire.
+    	"""
+
+    	# Filters the database for a specific questionnaire.
         db_questionnaire = Questionnaire.query.filter_by(id = questionnaire_id).first()
+
+        # If no result is found, return an error.
         if db_questionnaire is None:
             return MasonBuilder.create_error_response(404, "Not found", "No questionnaire was found with the id {}".format(questionnaire_id))
+
+        # Filters the database for a specific question.
         db_question = Question.query.filter_by(id = question_id).first()
+
+        # If no result is found, return an error.
         if db_question is None:
             return MasonBuilder.create_error_response(405, "Not found", "No question was found with the id {}".format(question_id))
 		
+		# Otherwise, continue building the response.
         questions = Question.query.filter_by(questionnaire_id = questionnaire_id).all()
         idOfQuestions = []
+
+        # Checking if the found question belongs to the specified questionnaire, this is a crucial point...        
         for q in questions:
             idOfQuestions.append(q.id)
         if int(question_id) not in idOfQuestions:
             return MasonBuilder.create_error_response(408, "Do not match", "The question with id {} does not belong to questionnaire {}".format(question_id, questionnaire_id))
-			
+		
+		# Keep building the response with all the answers.
         db_answer= Answer.query.filter_by(question_id = question_id).all()
         items=[]
         for item in db_answer:
@@ -736,29 +880,43 @@ class AnswerCollection(Resource):
         return Response(json.dumps(body), 200, mimetype=MASON)
 	
     def post(self, questionnaire_id, question_id):
+    	"""
+    	This method is used to create an answer for a question in a specific questionnaire.
+    	"""
+
+    	# Validity check of the request..
         if not request.json:
             return MasonBuilder.create_error_response(415, "Unsupported media type", "Request must be JSON")
-				
         try:
             validate(request.json, MasonBuilder.answer_schema(self))
         except ValidationError as e:
             return MasonBuilder.create_error_response(400, "Invalid JSON document", str(e))
 		
+		# Filters the database for a specific questionnaire
         questionnaire = Questionnaire.query.filter_by(id = questionnaire_id).first()
+
+        # If no result is found, return an error.
         if questionnaire is None:
             return MasonBuilder.create_error_response(404, "Not found", "Fail to add a Answer to a Questionnaire with the id {}".format(questionnaire_id))
 		
+		# Filters the database for a specific question.
         question = Question.query.filter_by(id = question_id).first()
+
+        # If no result is found, return an error.
         if question is None:
             return MasonBuilder.create_error_response(405, "Not found", "Fail to add a Answer to a Question with the id {}".format(question_id))
 		
+		# Continue building the response.
         questions = Question.query.filter_by(questionnaire_id = questionnaire_id).all()
         idOfQuestions = []
+
+        # Checking if the found question belongs to the specified questionnaire, this is a crucial point...  
         for q in questions:
             idOfQuestions.append(q.id)
         if int(question_id) not in idOfQuestions:
             return MasonBuilder.create_error_response(408, "Do not match", "The question with id {} does not belong to questionnaire {}".format(question_id, questionnaire_id))
-			
+		
+		# Keep building the response, adding a new object into the database and application.
         answer_id = ''
         answer = Answer(
             question_id = question_id,
@@ -771,35 +929,61 @@ class AnswerCollection(Resource):
     
         return Response(status = 201, headers={"Location": "/api/questionnaires/{}/questions/{}/answers/{}/".format(questionnaire_id, question_id, answer_id)})
 
+# Adding the AnswerCollection resource into our API.		
 api.add_resource(AnswerCollection, "/api/questionnaires/<questionnaire_id>/questions/<question_id>/answers/")
 
 class AnswerItem(Resource):
+	"""
+	This class represents a resource called AnswerItem.
+	On this resource, there are three functions a client can use: GET, PUt and DELETE.
+	"""
     def get(self, questionnaire_id, question_id, id):
+    	"""
+    	This method is used to retrieve an anwer given to a question for a specific questionnaire.
+    	"""
+
+    	# Filters the database for a specific questionnaire.
         db_questionnaire = Questionnaire.query.filter_by(id = questionnaire_id).first()
+
+        # If no result is found, return an error.
         if db_questionnaire is None:
             return MasonBuilder.create_error_response(404, "Not found", "No questionnaire was found with the id {}".format(questionnaire_id))
+
+        # Filters the database for a specific question.
         db_question = Question.query.filter_by(id = question_id).first()
+
+        # If no result is found, return an error.
         if db_question is None:
             return MasonBuilder.create_error_response(405, "Not found", "No question was found with the id {}".format(question_id))
 		
+		# Otherwise, continue building the response.
         questions = Question.query.filter_by(questionnaire_id = questionnaire_id).all()
         idOfQuestions = []
+
+        # Checking if the found question belongs to the specified questionnaire, this is a crucial point...  
         for q in questions:
             idOfQuestions.append(q.id)
         if int(question_id) not in idOfQuestions:
             return MasonBuilder.create_error_response(408, "Do not match", "The question with id {} does not belong to questionnaire {}".format(id, questionnaire_id))
 		
+		# Filters the database for a specific answer.
         db_answer = Answer.query.filter_by(id = id).first()
+
+        # If no result is found, return an error.
         if db_answer is None:
             return MasonBuilder.create_error_response(406, "Not found", "No answer was found with the id {}".format(id))
 		
+		# Otherwise, continue building the response.
         answers = Answer.query.filter_by(question_id = question_id).all()
         idOfAnswers = []
+
+        # Checking if the found answer belongs to the specified question, this is also a crucial point...  
         for a in answers:
             idOfAnswers.append(a.id)
         if int(id) not in idOfAnswers:
             return MasonBuilder.create_error_response(409, "Do not match", "The answer with id {} does not belong to question {}".format(id, question_id))
 		
+		# Keep building the response.
         body = InventoryBuilder(
             id = db_answer.id,
             question_id = db_answer.question_id,
@@ -816,31 +1000,52 @@ class AnswerItem(Resource):
         return Response(json.dumps(body), 200, mimetype = MASON)
 	
     def put(self, questionnaire_id, question_id, id):
+    	"""
+    	This method is used to edit an answer to a given question for a specified questionnaire.
+    	"""
+
+    	# Filters the database for a specific questionnaire.
         db_questionnaire = Questionnaire.query.filter_by(id = questionnaire_id).first()
+
+        # If no result is found, return an error.
         if db_questionnaire is None:
             return MasonBuilder.create_error_response(404, "Not found", "No questionnaire was found with the id {}".format(questionnaire_id))
+
+        # Filters the database for a specific question.
         db_question = Question.query.filter_by(id = question_id).first()
+
+        # If no result is found, return an error.
         if db_question is None:
             return MasonBuilder.create_error_response(405, "Not found", "No question was found with the id {}".format(question_id))
 		
+		# Otherwise, keep building the response.
         questions = Question.query.filter_by(questionnaire_id = questionnaire_id).all()
         idOfQuestions = []
+
+        # Checking if the found question belongs to the specified questionnaire, this is a crucial point...  
         for q in questions:
             idOfQuestions.append(q.id)
         if int(question_id) not in idOfQuestions:
             return MasonBuilder.create_error_response(408, "Do not match", "The question with id {} does not belong to questionnaire {}".format(id, questionnaire_id))
 		
+		# Filters the database for a specific answer.
         db_answer = Answer.query.filter_by(id = id).first()
+
+        # If no result is found, return an error.
         if db_answer is None:
             return MasonBuilder.create_error_response(406, "Not found", "No answer was found with the id {}".format(id))
 		
+		# Otherwise, continue building the response.
         answers = Answer.query.filter_by(question_id = question_id).all()
         idOfAnswers = []
+
+       	# Checking if the found answer belongs to the specified question, this is also a crucial point...  
         for a in answers:
             idOfAnswers.append(a.id)
         if int(id) not in idOfAnswers:
             return MasonBuilder.create_error_response(409, "Do not match", "The answer with id {} does not belong to question {}".format(id, question_id))
 		
+		# Validity check of the request.
         if not request.json:
             return MasonBuilder.create_error_response(415, "Unsupported media type", "Request must be JSON")
         try:
@@ -848,6 +1053,7 @@ class AnswerItem(Resource):
         except ValidationError as e:
             return MasonBuilder.create_error_response(400, "Invalid JSON document", str(e))
             
+        # Keep building the response.
         db_answer.content = request.json["content"]
         db_answer.userName = request.json["userName"]
         db.session.commit()
@@ -855,53 +1061,91 @@ class AnswerItem(Resource):
         return Response(status = 204, headers={"Location":"/api/questionnaires/{}/questions/{}/answers/{}/".format(questionnaire_id, question_id, id)})
         
     def delete(self, questionnaire_id, question_id, id):
+    	"""
+    	This method is used to delete an answer given to a question in a specific questionnaire.
+    	"""
+
+    	# Filters the database for a specific questionnaire.
         db_questionnaire = Questionnaire.query.filter_by(id = questionnaire_id).first()
+
+        # If no result is found, return an error.
         if db_questionnaire is None:
             return MasonBuilder.create_error_response(404, "Not found", "No questionnaire was found with the id {}".format(questionnaire_id))
+
+        # Filters the database for a specific question.
         db_question = Question.query.filter_by(id = question_id).first()
+
+        # If no result is found, return an error.
         if db_question is None:
             return MasonBuilder.create_error_response(405, "Not found", "No question was found with the id {}".format(question_id))
 		
+		# Otherwise, continue building the response.
         questions = Question.query.filter_by(questionnaire_id = questionnaire_id).all()
         idOfQuestions = []
+
+        # Checking if the found question belongs to the specified questionnaire, this is a crucial point...  
         for q in questions:
             idOfQuestions.append(q.id)
         if int(question_id) not in idOfQuestions:
             return MasonBuilder.create_error_response(408, "Do not match", "The question with id {} does not belong to questionnaire {}".format(id, questionnaire_id))
 		
+		# Filters the database for a specific answer.
         db_answer = Answer.query.filter_by(id = id).first()
+
+        # If no result is found, return an error.
         if db_answer is None:
             return MasonBuilder.create_error_response(406, "Not found", "No answer was found with the id {}".format(id))
         
+        # Otherwise, continue building the response.
         answers = Answer.query.filter_by(question_id = question_id).all()
         idOfAnswers = []
+
+        # Checking if the found question belongs to the specified answer, this is also a crucial point...  
         for a in answers:
             idOfAnswers.append(a.id)
         if int(id) not in idOfAnswers:
             return MasonBuilder.create_error_response(409, "Do not match", "The answer with id {} does not belong to question {}".format(id, question_id))
 		
+		# Keep building the response.
         db.session.delete(db_answer)
         db.session.commit()
 			
         return Response(status = 204, headers={"Location":"/api/questionnaires/{}/questions/{}/answers/{}/".format(questionnaire_id, question_id, id)})
-        
+
+# Adding the AnswerItem resource into our API.		        
 api.add_resource(AnswerItem, "/api/questionnaires/<questionnaire_id>/questions/<question_id>/answers/<id>/")
 
 class AnswerOfUserToQuestionnaire(Resource):
+	"""
+	This class represents a resource called AnswerOfUserToQuestionnaire.
+	On this resource, there is only one function a client can use: GET.
+	"""
     def get(self, questionnaire_id, userName):
+    	"""
+    	This method is used to retrieve all the answers given to a specific questionnaire by a user.
+    	"""
+
+    	# Filters the database for a specific questionnaire.
         db_questionnire = Questionnaire.query.filter_by(id = questionnaire_id).first()
+
+        # If no result is found, return an error.
         if db_questionnire is None:
             return MasonBuilder.create_error_response(404, "Not found", "No Questionnaire was found with id {}".format(questionnaire_id))
 		
+		# Filters the database for a specific answer.
         db_answer = Answer.query.filter_by(userName = userName).first()
+
+        # If no result is found, return an error.
         if db_answer is None:
             return MasonBuilder.create_error_response(405, "Not found", "No user was found with name {}".format(userName))
 		
+		# Otherwise, continue building the response. Retrieves all the answers given by a user.
         questions = []
         answers = Answer.query.filter_by(userName = userName).all()
         for a in answers:
             questions.append(a.question_id)
         
+        # Gets all the questions in the specified questionnaire.
         idOfQuestion=[]
         for q in questions:
             question = Question.query.filter_by(id = q).first()
@@ -909,6 +1153,7 @@ class AnswerOfUserToQuestionnaire(Resource):
             if int(idOfQuestionnaire) == int(questionnaire_id):
                 idOfQuestion.append(q)
 		
+		# Matches answers with the questions.
         items=[]
         for index in idOfQuestion:
             item = Answer.query.filter_by(question_id = index).first()
@@ -922,6 +1167,7 @@ class AnswerOfUserToQuestionnaire(Resource):
             answer.add_control("profile", ANSWER_PROFILE)
             items.append(answer)
 			
+		# Keep building the answer to return.
         body = InventoryBuilder(
 			items = items
         )
@@ -930,8 +1176,10 @@ class AnswerOfUserToQuestionnaire(Resource):
 		    
         return Response(json.dumps(body), 200, mimetype=MASON)
 
+# Adding the AnswerOfUserToQuestionnaire resource into our API.		        
 api.add_resource(AnswerOfUserToQuestionnaire, "/api/questionnaires/<questionnaire_id>/answers/<userName>/")
 
+# The next lines for the addressability our API.
 @app.route("/profiles/questionnaire/")
 def profilesforquestionnaire():
 	return "", 200
