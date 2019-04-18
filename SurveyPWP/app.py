@@ -1160,7 +1160,7 @@ class AnswerOfUserToQuestionnaire(Resource):
 		# Matches answers with the questions.
 		items=[]
 		for index in idOfQuestion:
-			item = Answer.query.filter_by(question_id = index).first()
+			item = Answer.query.filter_by(question_id = index, userName = userName).first()
 			answer = InventoryBuilder(
 				id = item.id,
 				question_id = item.question_id,
