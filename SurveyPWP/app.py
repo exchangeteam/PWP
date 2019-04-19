@@ -1156,20 +1156,33 @@ class AnswerOfUserToQuestionnaire(Resource):
 			idOfQuestionnaire = question.questionnaire_id
 			if int(idOfQuestionnaire) == int(questionnaire_id):
 				idOfQuestion.append(q)
+		idOfQuestion = sorted(set(idOfQuestion),key=idOfQuestion.index) 
 		
 		# Matches answers with the questions.
 		items=[]
 		for index in idOfQuestion:
-			item = Answer.query.filter_by(question_id = index, userName = userName).first()
-			answer = InventoryBuilder(
-				id = item.id,
-				question_id = item.question_id,
-				content = item.content,
-				userName = item.userName
-			)
-			answer.add_control("self", "/api/questionnaires/{}/answers/{}/".format(questionnaire_id, userName))
-			answer.add_control("profile", ANSWER_PROFILE)
-			items.append(answer)
+			item = Answer.query.filter_by(question_id = index, userName = userName).all()
+			if len(item)==1:
+				answer = InventoryBuilder(
+					id = item[0].id,
+					question_id = item[0].question_id,
+					content = item[0].content,
+					userName = item[0].userName
+				)
+				answer.add_control("self", "/api/questionnaires/{}/answers/{}/".format(questionnaire_id, userName))
+				answer.add_control("profile", ANSWER_PROFILE)
+				items.append(answer)
+			else:
+				for i in item:
+					answer = InventoryBuilder(
+						id = i.id,
+						question_id = i.question_id,
+						content = i.content,
+						userName = i.userName
+					)
+					answer.add_control("self", "/api/questionnaires/{}/answers/{}/".format(questionnaire_id, userName))
+					answer.add_control("profile", ANSWER_PROFILE)
+					items.append(answer)
 			
 		# Keep building the answer to return.
 		body = InventoryBuilder(
