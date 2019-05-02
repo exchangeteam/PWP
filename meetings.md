@@ -95,8 +95,8 @@
 *ONLY USED BY COURSE STAFF: Additional comments from the course staff*
 
 ## Meeting 4.
-* **DATE:26.04.2019**
-* **ASSISTANTS:Mika**
+* **DATE: 26.04.2019**
+* **ASSISTANTS: Mika**
 * **GRADE:** *To be filled by course staff*
 
 ### Minutes
