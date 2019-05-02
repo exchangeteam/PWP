@@ -95,17 +95,31 @@
 *ONLY USED BY COURSE STAFF: Additional comments from the course staff*
 
 ## Meeting 4.
-* **DATE:**
-* **ASSISTANTS:**
+* **DATE: 26.04.2019**
+* **ASSISTANTS: Mika**
 * **GRADE:** *To be filled by course staff*
 
 ### Minutes
-*Summary of what was discussed during the meeting*
+ - The meeting took about 30 minutes.
+ - The teacher made some suggestions to imporve the code of API implementation.
+ - The teacher had some suggesetions on providing a coverage of the test.
+ 
 
 ### Action points
-*List here the actions points discussed with assistants*
+- In the second question of deadline (Resources implementation),
+    - We should use api.url_for() instead of .format() to determine the location of resources, because if there are some changes of the urls in the future, we do not need to change too much codes by using .url_for().
+    - We should change some error codes which does not present 'Not Found' to 404.
+    - We can put all api.add_resource() at bottom as a url map.
+    - In some retrieves, we should include more parameters, which can reduce wrong situations.
+    - We should set the default value for parameter 'description', so we can avoid some keyErrors and repeated actions.
+    - We should improve the function 'delete'.
 
-
+- In the third question of deadline (RESTful API testing),
+    - We should use the following code to provide a coverage of the test, which has more detailed information.
+    ```python
+    pytest --cpv-report term-missing --cov=app
+    ```
+    
 ### Comments from staff
 *ONLY USED BY COURSE STAFF: Additional comments from the course staff*
 
