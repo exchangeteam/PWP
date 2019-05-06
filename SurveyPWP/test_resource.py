@@ -8,7 +8,8 @@ from jsonschema import validate
 from sqlalchemy.engine import Engine
 from sqlalchemy import event
 from sqlalchemy.exc import IntegrityError, StatementError
-from app import app,db, Questionnaire, Question, Answer
+from app import app, db, Questionnaire, Question, Answer
+
 
 @pytest.fixture
 def client():
@@ -31,6 +32,7 @@ def client():
     os.close(db_fd)
     os.unlink(db_fname)
 
+
 def _populate_db():
     """
     Pre-populate database with 2 questionnaires.One of the questionnaire has 3 questions 
@@ -47,18 +49,19 @@ def _populate_db():
     ))
     for i in range(1, 4):
         q = Question(
-            title = "test-question-{}".format(i),
-            description = "test-question",
-            questionnaire = _questionnaire
+            title="test-question-{}".format(i),
+            description="test-question",
+            questionnaire=_questionnaire
         )
         a = Answer(
-            userName = "test-user-{}".format(i),
-            content = "test-answer",
-            question = q
+            userName="test-user-{}".format(i),
+            content="test-answer",
+            question=q
         )
         db.session.add(q)
         db.session.add(a)
     db.session.commit()
+
 
 def _check_namespace(client, response):
     """
@@ -69,29 +72,32 @@ def _check_namespace(client, response):
     resp = client.get(ns_href)
     assert resp.status_code == 200
 
-def _check_control_get_method(ctrl, client, obj):
 
+def _check_control_get_method(ctrl, client, obj):
     href = obj["@controls"][ctrl]["href"]
     resp = client.get(href)
     assert resp.status_code == 200
 
-def _check_control_delete_method(ctrl, client, obj):
 
+def _check_control_delete_method(ctrl, client, obj):
     href = obj["@controls"][ctrl]["href"]
     method = obj["@controls"][ctrl]["method"].lower()
     assert method == "delete"
     resp = client.delete(href)
     assert resp.status_code == 204
 
+
 def _get_questionnaire_json(number=1):
     return {"title": "test-questionnaire-{}".format(number), "description": "test-questionnaire"}
+
 
 def _get_question_json(number=1):
     return {"title": "test-question-{}".format(number), "description": "test-question"}
 
+
 def _get_answer_json(number=1):
-    return {"userName":"test-user-{}".format(number),"content":"test-answer-content"}
-    
+    return {"userName": "test-user-{}".format(number), "content": "test-answer-content"}
+
 
 def _check_control_post_method(ctrl, client, obj):
     """
@@ -118,6 +124,7 @@ def _check_control_post_method(ctrl, client, obj):
     resp = client.post(href, json=body)
     assert resp.status_code == 201
 
+
 def _check_control_put_method(ctrl, client, obj, putType):
     """
     Checks a PUT type control from a JSON object be it root document or an item
@@ -128,7 +135,7 @@ def _check_control_put_method(ctrl, client, obj, putType):
     status code of 204.
     This function get paramater putType which represent the item that is being edited.
     """
-    
+
     ctrl_obj = obj["@controls"][ctrl]
     href = ctrl_obj["href"]
     method = ctrl_obj["method"].lower()
@@ -145,6 +152,7 @@ def _check_control_put_method(ctrl, client, obj, putType):
     resp = client.put(href, json=body)
     assert resp.status_code == 204
 
+
 class TestQuestionnaireCollection(object):
     """
     This class implements tests for each HTTP method in questionnaire collection
@@ -152,7 +160,7 @@ class TestQuestionnaireCollection(object):
     """
     RESOURCE_URL = "/api/questionnaires/"
 
-    def test_get(self,client):
+    def test_get(self, client):
         """
         Tests the GET method. Checks that the response status code is 200, and
         then checks that all of the expected attributes and controls are
@@ -205,7 +213,7 @@ class TestQuestionnaireItem(object):
     RESOURCE_URL = "/api/questionnaires/1/"
     INVALID_URL = "/api/quesitonnaires/0/"
 
-    def test_get(self,client):
+    def test_get(self, client):
         """
         Tests the GET method. Checks that the response status code is 200, and
         then checks that all of the expected attributes and controls are
@@ -220,17 +228,17 @@ class TestQuestionnaireItem(object):
         _check_namespace(client, body)
         _check_control_get_method("profile", client, body)
         _check_control_get_method("collection", client, body)
-        _check_control_put_method("edit", client, body,"questionnaire")
+        _check_control_put_method("edit", client, body, "questionnaire")
         _check_control_delete_method("survey:delete", client, body)
         resp = client.get(self.INVALID_URL)
         assert resp.status_code == 404
-            
-    def test_put(self,client):
+
+    def test_put(self, client):
         """Test for valid PUT method"""
         valid = _get_questionnaire_json()
 
         # test with valid
-        resp = client.put(self.RESOURCE_URL,json=valid)
+        resp = client.put(self.RESOURCE_URL, json=valid)
         assert resp.status_code == 204
 
         # test with another url
@@ -267,14 +275,13 @@ class TestQuestionnaireItem(object):
 
         resp = client.delete(self.INVALID_URL)
         assert resp.status_code == 404
-        
 
 
 class TestQuestionsByQuestionnaire(object):
     RESOURCE_URL = "/api/questionnaires/1/questions/"
     INVALID_URL = "/api/questionnaires/0/questions/"
 
-    def test_get(self,client):
+    def test_get(self, client):
         """Tests for questions by questionnaire GET method."""
         resp = client.get(self.RESOURCE_URL)
         assert resp.status_code == 200
@@ -289,7 +296,7 @@ class TestQuestionsByQuestionnaire(object):
             assert "title" in item
             assert "description" in item
 
-    def test_post(self, client): 
+    def test_post(self, client):
         valid = _get_question_json()
 
         # test with wrong content type
@@ -318,12 +325,13 @@ class TestQuestionsByQuestionnaire(object):
         resp = client.post(self.RESOURCE_URL, json=valid)
         assert resp.status_code == 400
 
+
 class TestQuestionItem(object):
     RESOURCE_URL = "/api/questionnaires/1/questions/1/"
     INVALID_URL = "/api/questionnaires/1/questions/0/"
     MISMATCH_URL = "/api/questionnaires/2/questions/3/"
 
-    def test_get(self,client):
+    def test_get(self, client):
         """
         Tests the GET method. Checks that the response status code is 200, and
         then checks that all of the expected attributes and controls are
@@ -338,24 +346,24 @@ class TestQuestionItem(object):
         _check_namespace(client, body)
         _check_control_get_method("profile", client, body)
         _check_control_get_method("collection", client, body)
-        _check_control_put_method("edit", client, body,"question")
+        _check_control_put_method("edit", client, body, "question")
         _check_control_delete_method("survey:delete", client, body)
         resp = client.get(self.INVALID_URL)
-        assert resp.status_code == 405
+        assert resp.status_code == 404
         resp = client.get(self.MISMATCH_URL)
-        assert resp.status_code == 408 
-            
-    def test_put(self,client):
+        assert resp.status_code == 404
+
+    def test_put(self, client):
         """Test for valid PUT method"""
         valid = _get_question_json()
 
         # test with valid
-        resp = client.put(self.RESOURCE_URL,json=valid)
+        resp = client.put(self.RESOURCE_URL, json=valid)
         assert resp.status_code == 204
 
         # test with another url
         resp = client.put(self.INVALID_URL, json=valid)
-        assert resp.status_code == 405
+        assert resp.status_code == 404
 
         # test with wrong content type
         resp = client.put(self.RESOURCE_URL, data=json.dumps(valid))
@@ -363,7 +371,7 @@ class TestQuestionItem(object):
 
         # test mismatch question id to questionnaire 408
         resp = client.put(self.MISMATCH_URL, data=json.dumps(valid))
-        assert resp.status_code == 408
+        assert resp.status_code == 404
 
         # remove field title for 400
         valid.pop("title")
@@ -387,19 +395,20 @@ class TestQuestionItem(object):
         resp = client.delete(self.RESOURCE_URL)
         assert resp.status_code == 204
         resp = client.get(self.RESOURCE_URL)
-        assert resp.status_code == 405
+        assert resp.status_code == 404
 
         resp = client.delete(self.INVALID_URL)
-        assert resp.status_code == 405
+        assert resp.status_code == 404
         resp = client.delete(self.MISMATCH_URL)
-        assert resp.status_code == 408
+        assert resp.status_code == 404
+
 
 class TestAnswersToQuestion(object):
     RESOURCE_URL = "/api/questionnaires/1/questions/1/answers/"
     INVALID_URL = "/api/questionnaires/1/questions/0/answers/"
     MISMATCH_URL = "/api/questionnaires/2/questions/3/answers/"
 
-    def test_get(self,client):
+    def test_get(self, client):
         """
         Tests the GET method. Checks that the response status code is 200, and
         then checks that all of the expected attributes and controls are
@@ -418,9 +427,9 @@ class TestAnswersToQuestion(object):
             assert "content" in item
             assert "userName" in item
         resp = client.get(self.MISMATCH_URL)
-        assert resp.status_code == 408
+        assert resp.status_code == 404
 
-    def test_post(self, client): 
+    def test_post(self, client):
         valid = _get_answer_json()
 
         # test with wrong content type
@@ -441,11 +450,11 @@ class TestAnswersToQuestion(object):
 
         # test with invalid url
         resp = client.post(self.INVALID_URL, json=valid)
-        assert resp.status_code == 405
+        assert resp.status_code == 404
 
         # test with mismatch question to questionnaire, 408
         resp = client.get(self.MISMATCH_URL)
-        assert resp.status_code == 408 
+        assert resp.status_code == 404
 
         # remove field title for 400
         valid = _get_answer_json()
@@ -453,13 +462,14 @@ class TestAnswersToQuestion(object):
         resp = client.post(self.RESOURCE_URL, json=valid)
         assert resp.status_code == 400
 
+
 class TestAnswerItem(object):
     RESOURCE_URL = "/api/questionnaires/1/questions/1/answers/1/"
     INVALID_URL = "/api/quesitonnaires/1/questions/1/answers/0/"
     MISMATCH_URL1 = "/api/questionnaires/2/questions/3/answers/2/"
     MISMATCH_URL2 = "/api/questionnaires/1/questions/1/answers/2/"
 
-    def test_get(self,client):
+    def test_get(self, client):
         """
         Tests the GET method. Checks that the response status code is 200, and
         then checks that all of the expected attributes and controls are
@@ -474,33 +484,33 @@ class TestAnswerItem(object):
         _check_namespace(client, body)
         _check_control_get_method("profile", client, body)
         _check_control_get_method("collection", client, body)
-        _check_control_put_method("edit", client, body,"answer")
+        _check_control_put_method("edit", client, body, "answer")
         _check_control_delete_method("survey:delete", client, body)
         resp = client.get(self.INVALID_URL)
         assert resp.status_code == 404
         resp = client.get(self.MISMATCH_URL1)
-        assert resp.status_code == 408
+        assert resp.status_code == 404
         resp = client.get(self.MISMATCH_URL2)
-        assert resp.status_code == 409
-            
-    def test_put(self,client):
+        assert resp.status_code == 404
+
+    def test_put(self, client):
         """Test for valid PUT method"""
         valid = _get_answer_json()
 
         # test with valid
-        resp = client.put(self.RESOURCE_URL,json=valid)
+        resp = client.put(self.RESOURCE_URL, json=valid)
         assert resp.status_code == 204
 
         # test with another url
         resp = client.put(self.INVALID_URL, json=valid)
         assert resp.status_code == 404
 
-        # test with mismatch question to questionnaire, 408
+        # test with mismatch question to questionnaire, 404
         resp = client.get(self.MISMATCH_URL1, data=valid)
-        assert resp.status_code == 408
-        # test with mismatch answer to question, 409
+        assert resp.status_code == 404
+        # test with mismatch answer to question, 404
         resp = client.get(self.MISMATCH_URL2, data=valid)
-        assert resp.status_code == 409
+        assert resp.status_code == 404
 
         # test with wrong content type
         resp = client.put(self.RESOURCE_URL, data=json.dumps(valid))
@@ -532,11 +542,11 @@ class TestAnswerItem(object):
         resp = client.delete(self.RESOURCE_URL)
         assert resp.status_code == 204
         resp = client.get(self.RESOURCE_URL)
-        assert resp.status_code == 406
+        assert resp.status_code == 404
         resp = client.delete(self.INVALID_URL)
         assert resp.status_code == 404
 
         resp = client.delete(self.MISMATCH_URL1)
-        assert resp.status_code == 408
+        assert resp.status_code == 404
         resp = client.delete(self.MISMATCH_URL2)
-        assert resp.status_code == 409
+        assert resp.status_code == 404
