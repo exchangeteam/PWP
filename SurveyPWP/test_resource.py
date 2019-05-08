@@ -251,8 +251,8 @@ class TestQuestionnaireItem(object):
 
         # remove field title for 400
         valid.pop("title")
-        resp = client.post(self.RESOURCE_URL, json=valid)
-        assert resp.status_code == 405
+        resp = client.put(self.RESOURCE_URL, json=valid)
+        assert resp.status_code == 400
 
         valid = _get_questionnaire_json()
         resp = client.put(self.RESOURCE_URL, json=valid)
@@ -516,14 +516,14 @@ class TestAnswerItem(object):
         resp = client.put(self.RESOURCE_URL, data=json.dumps(valid))
         assert resp.status_code == 415
 
-        # remove field for 405
+        # remove field for 400
         valid.pop("userName")
-        resp = client.post(self.RESOURCE_URL, json=valid)
-        assert resp.status_code == 405
+        resp = client.put(self.RESOURCE_URL, json=valid)
+        assert resp.status_code == 400
         valid = _get_answer_json()
         valid.pop("content")
-        resp = client.post(self.RESOURCE_URL, json=valid)
-        assert resp.status_code == 405
+        resp = client.put(self.RESOURCE_URL, json=valid)
+        assert resp.status_code == 400
 
         valid = _get_answer_json()
         resp = client.put(self.RESOURCE_URL, json=valid)
