@@ -66,7 +66,7 @@ The test for API functionalities are in `test_resource.py`. To run the test, you
 Our API can be found in this address: [http://45.76.39.46:5000/api/](http://45.76.39.46:5000/api/)   
 Our web client can be found in this address: [http://surveypwp.tk/](http://surveypwp.tk/)
 
-Our WEB CLIENT repository: [https://github.com/exchangeteam/surveyPWP_web](https://github.com/exchangeteam/surveyPWP_web)
+Our WEB CLIENT repository: [https://github.com/exchangeteam/surveyPWP_web](https://github.com/exchangeteam/surveyPWP_web)   
 Our ANDROID CLIENT repository: [https://github.com/exchangeteam/surveypwp_android](https://github.com/exchangeteam/surveypwp_android)
 
 
