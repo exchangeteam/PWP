@@ -5,7 +5,7 @@
 * Student 2. Zifan Xiao and xiao0126@139.com
 * Student 3. Mengnanlan Peng and llanan9817@163.com
 # Database setup
-## Required imformation
+## Required information
 The creating of database requires `Flask`, `flask_sqlalchemy`, `sqlite3`. All of these can be installed by using `pip install` command with the name, for example `pip install Flask`. 
 
 We also recommend you to use the following command to install all the librarys you need.
@@ -65,6 +65,9 @@ The test for API functionalities are in `test_resource.py`. To run the test, you
 # API and client information of our application
 Our API can be found in this address: [http://45.76.39.46:5000/api/](http://45.76.39.46:5000/api/)   
 Our web client can be found in this address: [http://surveypwp.tk/](http://surveypwp.tk/)
+
+Our WEB CLIENT repository: [https://github.com/exchangeteam/surveyPWP_web](https://github.com/exchangeteam/surveyPWP_web)
+Our ANDROID CLIENT repository: [https://github.com/exchangeteam/surveypwp_android](https://github.com/exchangeteam/surveypwp_android)
 
 
 
