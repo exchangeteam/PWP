@@ -119,7 +119,7 @@
     ```python
     pytest --cpv-report term-missing --cov=app
     ```
-    - The report is extracted and can be found in this [https://github.com/exchangeteam/SurveyPWP/blob/master/resources/deadline4/pytest_coverage_report.png](link)
+    - The report is extracted and can be found in this [link](https://github.com/exchangeteam/SurveyPWP/blob/master/resources/deadline4/pytest_coverage_report.png)
     
 ### Comments from staff
 *ONLY USED BY COURSE STAFF: Additional comments from the course staff*
