@@ -63,8 +63,8 @@ If the FLASK has already been set up and the database has been configured proper
 The test for API functionalities are in `test_resource.py`. To run the test, you can just use command `pytest test_resource.py`.
 
 # API and client information of our application
-Our API can be found in this address: (http://45.76.39.46:5000/api/)[http://45.76.39.46:5000/api/]
-Our web client can be found in this address: (http://surveypwp.tk/)[http://surveypwp.tk/]
+Our API can be found in this address: [http://45.76.39.46:5000/api/](http://45.76.39.46:5000/api/)
+Our web client can be found in this address: [http://surveypwp.tk/](http://surveypwp.tk/)
 
 
 
